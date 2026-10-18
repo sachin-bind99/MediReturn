@@ -1,46 +1,25 @@
 # MediReturn Database Design
 
-## Main Entities
+## Implemented models
 
-MediReturn will initially contain these main entities:
+### User
 
-- User
-- Medicine
-- Inventory
-- Supplier
-- Return
-- Alert
+Stores a pharmacist account with a unique, normalized email address and a
+bcrypt-hashed password.
 
-## Entity Relationship
+### Medicine
+
+Stores a medicine catalog entry with its name, generic name, manufacturer,
+category, barcode, and optional description. Each entry belongs to the user who
+created it. Barcodes are unique within that user's catalog.
 
 ```text
-                         USER
-                          │
-                          │ owns/manages
-                          ▼
-                       PHARMACY
-                          │
-              ┌───────────┴───────────┐
-              │                       │
-              ▼                       ▼
-          MEDICINE                  SUPPLIER
-              │                       │
-              │                       │
-              └───────────┐   ┌───────┘
-                          ▼   ▼
-                       INVENTORY
-                          │
-             ┌────────────┼─────────────┐
-             │            │             │
-             ▼            ▼             ▼
-           Batch       Quantity       Expiry
-             │
-             ├── Purchase Price
-             │
-             └── Return Window
-                          │
-                          ▼
-                        RETURN
-                          │
-                          ▼
-                        ALERT
+USER 1 ---- many MEDICINE
+```
+
+## Planned models
+
+Inventory, Supplier, Return, and Alert are not implemented yet. The intended
+inventory model will connect a medicine to stock batches, quantities, expiry
+dates, purchase prices, and return windows. Return records and alerts can then
+refer to the affected inventory batches.
