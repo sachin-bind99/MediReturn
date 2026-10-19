@@ -1,14 +1,19 @@
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import connectDB from "./config/db.js";
-import app from "./app.js";
 
 const serverDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 dotenv.config({
     path: path.join(serverDirectory, ".env")
 });
+
+// ESM evaluates static imports before this module body. Load the server
+// environment first, then import modules that may read it during evaluation.
+const [{ default: connectDB }, { default: app }] = await Promise.all([
+    import("./config/db.js"),
+    import("./app.js"),
+]);
 
 const PORT = process.env.PORT || 5000;
 

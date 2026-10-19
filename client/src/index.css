@@ -2,63 +2,119 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  /* Shared MediReturn palette: soft botanical surfaces, deep readable ink and
-     one consistent green accent scale across the application. */
-  --color-canvas: #e7f0e9;
-  --color-panel: #f0f5f1;
-  --color-panel-muted: #d6e5db;
-  --color-input: #f6f9f7;
-  --color-line: #b7ccbd;
-  --color-ink: #1b352b;
-  --color-muted: #4e6659;
-  --color-focus: #365f4d;
-  --color-deep-teal: #365f4d;
-  --color-teal-hover: #2e5544;
-  --color-teal-accent: #49846b;
-  --color-sidebar: #caddd0;
-  --color-navbar: #659f8a;
-  --color-navbar-ink: #142d24;
-  --color-sage: #659f8a;
-  --color-sage-light: #c8ddd0;
-  --color-white: #ffffff;
-  --color-black: #152b25;
-  --color-mint-50: #f0f6f2;
-  --color-mint-100: #e0ede4;
-  --color-mint-200: #cbdfd1;
-  --color-mint-300: #a8cbb4;
-  --color-mint-400: #659f8a;
-  --color-mint-500: #5b967f;
-  --color-mint-600: #528d75;
-  --color-mint-700: #3f765f;
-  --color-mint-800: #365f4d;
-  --color-mint-900: #274a3b;
-  --color-slate-50: #f0f5f1;
-  --color-slate-100: #e5efe8;
-  --color-slate-200: #d5e3d9;
-  --color-slate-300: #b9cebf;
-  --color-slate-400: #566f63;
-  --color-slate-500: #4e6659;
-  --color-slate-600: #40584a;
-  --color-slate-700: #31483b;
-  --color-slate-800: #23382d;
-  --color-slate-900: #182f25;
-  --color-slate-950: #10241c;
-  --color-gray-50: #f0f5f1;
-  --color-gray-100: #e5efe8;
-  --color-gray-200: #d5e3d9;
-  --color-gray-300: #b9cebf;
-  --color-gray-400: #566f63;
-  --color-gray-500: #4e6659;
-  --color-gray-600: #40584a;
-  --color-gray-700: #31483b;
-  --color-gray-800: #23382d;
-  --color-gray-900: #182f25;
+  /* Shared Deep Forest palette for every page and form surface. */
+  --color-canvas: #111c18;
+  --color-panel: #1d2b25;
+  --color-panel-muted: #22352c;
+  --color-input: #27372f;
+  --color-line: #35483d;
+  --color-ink: #e1eae4;
+  --color-muted: #a7b9ae;
+  --color-focus: #79b99a;
+  --color-deep-teal: #285d4d;
+  --color-teal-hover: #356d58;
+  --color-teal-accent: #42836a;
+  --color-sidebar: #1d2b25;
+  --color-navbar: #285d4d;
+  --color-navbar-ink: #e1eae4;
+  --color-sage: #42836a;
+  --color-sage-light: #2b4236;
+  --color-white: #e1eae4;
+  --color-black: #0d1712;
+  --color-success: #79b99a;
+  --color-warning: #e8bd76;
+  --color-danger: #e89999;
+  --color-danger-button: #7c3f40;
+  --color-danger-button-hover: #693536;
+  --color-mint-50: #1d2b25;
+  --color-mint-100: #22352c;
+  --color-mint-200: #2e483a;
+  --color-mint-300: #496a55;
+  --color-mint-400: #68a585;
+  --color-mint-500: #5b997b;
+  --color-mint-600: #4e8f70;
+  --color-mint-700: #42836a;
+  --color-mint-800: #356d56;
+  --color-mint-900: #285d4d;
+  --color-slate-50: #1d2b25;
+  --color-slate-100: #24352d;
+  --color-slate-200: #35483d;
+  --color-slate-300: #4b6154;
+  --color-slate-400: #879b8f;
+  --color-slate-500: #a7b9ae;
+  --color-slate-600: #bbc9c0;
+  --color-slate-700: #cbd8d0;
+  --color-slate-800: #e1eae4;
+  --color-slate-900: #e1eae4;
+  --color-slate-950: #0d1712;
+  --color-gray-50: #1d2b25;
+  --color-gray-100: #24352d;
+  --color-gray-200: #35483d;
+  --color-gray-300: #4b6154;
+  --color-gray-400: #879b8f;
+  --color-gray-500: #a7b9ae;
+  --color-gray-600: #bbc9c0;
+  --color-gray-700: #cbd8d0;
+  --color-gray-800: #e1eae4;
+  --color-gray-900: #e1eae4;
+  --color-red-50: #382625;
+  --color-red-100: #492d2d;
+  --color-red-200: #684242;
+  --color-red-300: #865453;
+  --color-red-500: #d17e7e;
+  --color-red-600: #e89999;
+  --color-red-700: #f0acac;
+  --color-red-800: #f4c0c0;
+  --color-red-900: #f7d1d1;
+  --color-red-950: #fae5e5;
+  --color-rose-50: #382625;
+  --color-rose-100: #492d2d;
+  --color-rose-200: #684242;
+  --color-rose-500: #d17e7e;
+  --color-rose-600: #e89999;
+  --color-rose-700: #f0acac;
+  --color-rose-800: #f4c0c0;
+  --color-amber-50: #352c20;
+  --color-amber-100: #443722;
+  --color-amber-200: #635033;
+  --color-amber-300: #82663e;
+  --color-amber-600: #e8bd76;
+  --color-amber-700: #f0cd91;
+  --color-amber-800: #f4d9aa;
+  --color-amber-900: #f7e3c0;
+  --color-amber-950: #f9edd5;
+  --color-orange-50: #392d20;
+  --color-orange-100: #493923;
+  --color-orange-200: #665034;
+  --color-orange-600: #e8bd76;
+  --color-orange-700: #f0cd91;
+  --color-green-50: #203229;
+  --color-green-100: #2c4736;
+  --color-green-200: #456a50;
+  --color-green-600: #79b99a;
+  --color-green-700: #98d0ae;
+  --color-green-800: #b5dec0;
+  --color-emerald-50: #203229;
+  --color-emerald-200: #456a50;
+  --color-emerald-700: #98d0ae;
+  --color-emerald-800: #b5dec0;
+  --color-yellow-50: #393222;
+  --color-yellow-200: #655437;
+  --color-yellow-600: #e8bd76;
+  --color-yellow-700: #f0cd91;
+  --color-sky-50: #203338;
+  --color-sky-100: #2b4348;
+  --color-sky-200: #3b6368;
+  --color-sky-600: #87cbd0;
+  --color-sky-700: #a0d9db;
+  --color-sky-900: #d0eceb;
+  --color-sky-950: #e3f4f2;
 }
 
 html {
   min-width: 320px;
   scroll-behavior: smooth;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
@@ -73,17 +129,53 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-@layer base {
-  :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
-    border-color: var(--color-line);
-    background-color: var(--color-input);
-    color: var(--color-ink);
-  }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select,
+textarea {
+  border-color: var(--color-line);
+  background-color: var(--color-input);
+  color: var(--color-ink);
+}
 
-  :where(input, select, textarea)::placeholder {
-    color: var(--color-muted);
-    opacity: 1;
-  }
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+/* Keep accent text bright while the same mint scale stays dark for surfaces. */
+[class~="text-mint-50"],
+[class~="text-mint-100"],
+[class~="text-mint-800"],
+[class~="text-mint-900"] {
+  color: var(--color-ink);
+}
+
+[class~="text-mint-600"],
+[class~="text-mint-700"],
+[class~="text-mint-700/75"] {
+  color: var(--color-success);
+}
+
+[class~="text-mint-50/90"] {
+  color: var(--color-slate-800);
+}
+
+[class~="text-mint-100/75"] {
+  color: var(--color-muted);
+}
+
+[class~="text-mint-100/50"] {
+  color: var(--color-slate-400);
+}
+
+[class~="hover:text-mint-700"]:hover {
+  color: var(--color-success);
+}
+
+[class~="hover:text-mint-800"]:hover,
+[class~="hover:text-mint-900"]:hover {
+  color: var(--color-ink);
 }
 
 button,
@@ -92,8 +184,8 @@ a {
 }
 
 ::selection {
-  color: #17312b;
-  background: #c8ddd0;
+  color: var(--color-ink);
+  background: var(--color-mint-200);
 }
 
 #root {

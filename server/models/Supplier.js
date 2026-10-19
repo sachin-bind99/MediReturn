@@ -39,6 +39,16 @@ const supplierSchema = new mongoose.Schema(
             trim: true
         },
 
+        defaultReturnWindowDays: {
+            type: Number,
+            min: [0, "Default return window cannot be negative"]
+        },
+
+        defaultInventoryLocation: {
+            type: String,
+            trim: true
+        },
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

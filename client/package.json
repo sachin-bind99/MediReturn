@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test src/lib/authSession.test.js"
+    "test": "node --test"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",

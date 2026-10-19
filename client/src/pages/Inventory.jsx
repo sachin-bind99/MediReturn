@@ -592,6 +592,13 @@ function Inventory() {
         setShowForm(true);
     };
 
+    const handleOpenExistingBatch = (inventory) => {
+        setInventoryInitialValues({});
+        setSelectedInventory(inventory);
+        setShowForm(true);
+        clearScannerPrefill();
+    };
+
     // --------------------------------
     // VIEW
     // --------------------------------
@@ -923,6 +930,7 @@ function Inventory() {
                             onInventoryAdded={handleInventoryAdded}
                             onInventoryUpdated={handleInventoryUpdated}
                             onCancel={handleCancel}
+                            onOpenExistingBatch={handleOpenExistingBatch}
                         />
                     </div>
                 )}
@@ -1713,7 +1721,7 @@ function Inventory() {
                                         handleDeleteInventory
                                     }
                                     disabled={deleting}
-                                    className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                    className="rounded-lg bg-danger-button px-4 py-2 font-medium text-white hover:bg-danger-button-hover disabled:opacity-50"
                                 >
                                     {deleting
                                         ? "Deleting..."

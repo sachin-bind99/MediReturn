@@ -68,7 +68,9 @@ function Suppliers() {
 
         address: "",
 
-        returnPolicy: ""
+        returnPolicy: "",
+        defaultReturnWindowDays: "",
+        defaultInventoryLocation: ""
 
     });
 
@@ -239,7 +241,9 @@ function Suppliers() {
 
             address: "",
 
-            returnPolicy: ""
+            returnPolicy: "",
+            defaultReturnWindowDays: "",
+            defaultInventoryLocation: ""
 
         });
 
@@ -277,7 +281,9 @@ function Suppliers() {
 
             address: supplier.address || "",
 
-            returnPolicy: supplier.returnPolicy || ""
+            returnPolicy: supplier.returnPolicy || "",
+            defaultReturnWindowDays: supplier.defaultReturnWindowDays ?? "",
+            defaultInventoryLocation: supplier.defaultInventoryLocation || ""
 
         });
 
@@ -425,6 +431,14 @@ function Suppliers() {
 
         }
 
+        if (
+            formData.defaultReturnWindowDays !== "" &&
+            (!Number.isFinite(Number(formData.defaultReturnWindowDays)) ||
+                Number(formData.defaultReturnWindowDays) < 0)
+        ) {
+            return "Default return window must be a valid non-negative number";
+        }
+
 
 
         return "";
@@ -479,7 +493,12 @@ function Suppliers() {
 
                 address: formData.address.trim(),
 
-                returnPolicy: formData.returnPolicy.trim()
+                returnPolicy: formData.returnPolicy.trim(),
+                defaultReturnWindowDays:
+                    formData.defaultReturnWindowDays === ""
+                        ? null
+                        : Number(formData.defaultReturnWindowDays),
+                defaultInventoryLocation: formData.defaultInventoryLocation.trim()
 
             };
 
@@ -571,7 +590,9 @@ function Suppliers() {
 
                 address: "",
 
-                returnPolicy: ""
+                returnPolicy: "",
+                defaultReturnWindowDays: "",
+                defaultInventoryLocation: ""
 
             });
 
@@ -719,7 +740,9 @@ function Suppliers() {
 
             address: "",
 
-            returnPolicy: ""
+            returnPolicy: "",
+            defaultReturnWindowDays: "",
+            defaultInventoryLocation: ""
 
         });
 
@@ -1481,6 +1504,43 @@ function Suppliers() {
 
 
 
+                                {/* Optional defaults for new inventory batches */}
+                                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                                            Default Return Window (days)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="defaultReturnWindowDays"
+                                            value={formData.defaultReturnWindowDays}
+                                            onChange={handleChange}
+                                            min="0"
+                                            step="any"
+                                            placeholder="Optional"
+                                            disabled={formLoading}
+                                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-mint-500 focus:ring-2 focus:ring-mint-100 disabled:bg-gray-100"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                                            Default Inventory Location
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="defaultInventoryLocation"
+                                            value={formData.defaultInventoryLocation}
+                                            onChange={handleChange}
+                                            placeholder="Optional shelf or rack"
+                                            disabled={formLoading}
+                                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-mint-500 focus:ring-2 focus:ring-mint-100 disabled:bg-gray-100"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="-mt-3 text-xs text-muted">
+                                    These optional defaults prefill new inventory batches. The location is a shop storage location, separate from the supplier address.
+                                </p>
+
                                 {/* Buttons */}
 
                                 <div className="flex justify-end gap-3 border-t pt-5">
@@ -1617,7 +1677,7 @@ function Suppliers() {
 
                                     disabled={deleting}
 
-                                    className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-lg bg-danger-button px-4 py-2 font-medium text-white hover:bg-danger-button-hover disabled:cursor-not-allowed disabled:opacity-50"
 
                                 >
 

@@ -1,20 +1,25 @@
 
+import { normalizeExpiryDate } from "./expiryDate.js";
+
 const MANUFACTURER_LABEL =
     String.raw`(?:MANUFACTURER(?:\s+NAME)?|MANUFACTURED[.\s-]+(?:BY|(?:AND|&|/)\s*MARKETED[.\s-]+BY)|MARKETED[.\s-]+BY|M\s*\.?\s*F\s*\.?\s*[GD]\s*\.?\s*(?:BY|NAME))`;
 
 const FIELD_PATTERNS = {
     name: [
+        /^\s*(?:दवा(?:\s+का)?\s+नाम|ब्रांड(?:\s+का)?\s+नाम)\s*[:#=-]?\s*(.*?)\s*$/i,
         /^\s*(?:MEDICINE(?:\s+NAME)?|PRODUCT\s+NAME|TRADE\s+NAME|BRAND(?:\s+NAME)?)\s*[:#=-]?\s*(.*?)\s*$/i,
         /^\s*NAME\s*[:#=-]\s*(.*?)\s*$/i,
     ],
 
     genericName: [
+        /^\s*(?:संघटन|संरचना|सक्रिय\s+घटक)\s*[:#=-]?\s*(.*?)\s*$/i,
         /^\s*GENERIC(?:\s+NAME)?\s*[:#=-]?\s*(.*?)\s*$/i,
         /^\s*COMPOSITION\s*[:#=-]?\s*(.*?)\s*$/i,
         /^\s*ACTIVE\s+INGREDIENTS?\s*[:#=-]\s*(.*?)\s*$/i,
     ],
 
     manufacturer: [
+        /^\s*(?:निर्माता(?:\s+नाम)?|निर्मित\s+द्वारा)\s*[-:#=;,.|]?\s*(.*?)\s*$/i,
         new RegExp(
             `^\\s*${MANUFACTURER_LABEL}\\b\\s*[-:#=;,.\\u2013\\u2014|]?\\s*(.*?)\\s*$`,
             "i"
@@ -22,20 +27,33 @@ const FIELD_PATTERNS = {
     ],
 
     batchNumber: [
+        /^\s*(?:बैच(?:\s*(?:नं\.?|नंबर|संख्या))?|लॉट(?:\s*(?:नं\.?|नंबर|संख्या))?)\s*[:#=-]?\s*(.*?)\s*$/i,
         /^\s*(?:BATCH(?:\s*(?:NO\.?|NUMBER|#))?|B\.?\s*NO\.?|LOT(?:\s*(?:NO\.?|NUMBER|#))?)\s*[:#=-]?\s*(.*?)\s*$/i,
     ],
 
     expiryText: [
-        /^\s*(?:EXP(?:IRY|IRATION)?(?:\s*(?:DATE|DT))?|USE\s+BEFORE|BEST\s+BEFORE)\s*[:#=-]?\s*(.*?)\s*$/i,
+        /^\s*(?:समाप्ति(?:\s*(?:तिथि|दिनांक))?|उपयोग\s+(?:करें|से\s+पहले))(?=\s|[:#=-]|$)\s*[:#=-]?\s*(.*?)\s*$/i,
+        /^\s*(?:EXP\.?(?:IRY|IRATION)?\.?|USE\s+BEFORE|BEST\s+BEFORE)(?:\s*(?:DATE|DT))?\s*[:#=-]?\s*(.*?)\s*$/i,
+    ],
+
+    mrpText: [
+        /^\s*(?:एम\s*\.?\s*आर\s*\.?\s*पी|अधिकतम\s+खुदरा\s+मूल्य)\s*[:#=-]?\s*(?:\u20b9\s*)?(.*?)\s*$/i,
+        /^\s*(?:M\s*\.?\s*R\s*\.?\s*P\.?|MAXIMUM\s+RETAIL\s+PRICE)\s*(?:[:#=-]\s*)?(?:₹\s*)?(.*?)\s*$/i,
+    ],
+
+    manufacturingDate: [
+        /^\s*(?:निर्माण(?:\s*(?:तिथि|दिनांक))?|निर्मित\s*(?:तिथि|दिनांक))\s*[:#=-]?\s*(.*?)\s*$/i,
+        /^\s*(?:MFG\.?|MFD\.?|MANUFACTURING|MANUFACTURED)(?:\s*(?:DATE|DT))?\s*[:#=-]?\s*(.*?)\s*$/i,
     ],
 
     category: [
+        /^\s*(?:श्रेणी|दवा\s+वर्ग)\s*[:#=-]?\s*(.*?)\s*$/i,
         /^\s*CATEGORY\s*[:#=-]?\s*(.*?)\s*$/i,
     ],
 };
 
 const ANY_KNOWN_LABEL = new RegExp(
-    `^\\s*(?:MEDICINE(?:\\s+NAME)?|PRODUCT\\s+NAME|TRADE\\s+NAME|BRAND(?:\\s+NAME)?|NAME|GENERIC(?:\\s+NAME)?|COMPOSITION|ACTIVE\\s+INGREDIENTS?|(?:(?:EACH\\s+)?(?:TABLET|CAPSULE|CAPLET|\\d+\\s*ML)\\s+)?CONTAINS|${MANUFACTURER_LABEL}|MANUFACTUR(?:ING|ED)\\s+(?:LIC(?:ENCE|ENSE)?|DATE)|M\\s*\\.?\\s*F\\s*\\.?\\s*[GD](?:\\s*\\.?\\s*(?:BY|NAME|DATE|DT|LIC(?:ENCE|ENSE)?))?|BATCH|B\\.?\\s*NO\\.?|LOT|EXP(?:IRY|IRATION)?|USE\\s+BEFORE|BEST\\s+BEFORE|BARCODE|EAN|UPC|CATEGORY)\\b`,
+    `^\\s*(?:UNTRUSTED\\s+OCR\\s+LINE|MEDICINE(?:\\s+NAME)?|PRODUCT\\s+NAME|TRADE\\s+NAME|BRAND(?:\\s+NAME)?|NAME|GENERIC(?:\\s+NAME)?|COMPOSITION|ACTIVE\\s+INGREDIENTS?|(?:(?:EACH\\s+)?(?:TABLET|CAPSULE|CAPLET|\\d+\\s*ML)\\s+)?CONTAINS|${MANUFACTURER_LABEL}|MANUFACTUR(?:ING|ED)\\s+(?:LIC(?:ENCE|ENSE)?|DATE)|M\\s*\\.?\\s*F\\s*\\.?\\s*[GD](?:\\s*\\.?\\s*(?:BY|NAME|DATE|DT|LIC(?:ENCE|ENSE)?))?|MFG|MFD|BATCH|B\\.?\\s*NO\\.?|LOT|EXP\\.?(?:IRY|IRATION)?\\.?|USE\\s+BEFORE|BEST\\s+BEFORE|M\\s*\\.?\\s*R\\s*\\.?\\s*P\\.?|MAXIMUM\\s+RETAIL\\s+PRICE|BARCODE|EAN|UPC|CATEGORY)\\b`,
     "i"
 );
 
@@ -54,6 +72,38 @@ function cleanValue(value) {
         .replace(/[\s;|]+$/, "")
         .replace(/\s+/g, " ")
         .trim();
+}
+
+function isKnownLabel(value) {
+    return ANY_KNOWN_LABEL.test(value) ||
+        /^\s*(?:दवा(?:\s+का)?\s+नाम|ब्रांड(?:\s+का)?\s+नाम|संघटन|संरचना|सक्रिय\s+घटक|निर्माता|बैच|लॉट|समाप्ति|उपयोग|निर्माण|एम\s*\.?\s*आर\s*\.?\s*पी|अधिकतम\s+खुदरा\s+मूल्य|श्रेणी|दवा\s+वर्ग)(?:\s|[:#=-]|$)/i.test(value);
+}
+
+function isPlausibleBatchNumber(value) {
+    const candidate = cleanValue(value);
+    if (!candidate || candidate.length > 32) return false;
+    if (/\b(?:UNTRUSTED|DO\s+NOT|FREEZE|STORE|KEEP|SHAKE|TAKE|PROTECT|AVOID|BEFORE|AFTER|DOSAGE|DIRECTION|WARNING|CAUTION|NOT\s+FOR)\b/i.test(candidate)) {
+        return false;
+    }
+
+    return /^[\p{L}\p{N}][\p{L}\p{N}._/ -]*$/u.test(candidate);
+}
+
+function extractBatchNumber(lines) {
+    for (let index = 0; index < lines.length; index += 1) {
+        const match = FIELD_PATTERNS.batchNumber
+            .map((pattern) => lines[index].match(pattern))
+            .find(Boolean);
+        if (!match) continue;
+
+        const inlineValue = cleanValue(match[1]);
+        if (isPlausibleBatchNumber(inlineValue)) return inlineValue;
+
+        const nextLine = cleanValue(lines[index + 1]);
+        if (isPlausibleBatchNumber(nextLine)) return nextLine;
+    }
+
+    return "";
 }
 
 function extractLabeledValue(lines, patterns) {
@@ -81,7 +131,7 @@ function extractLabeledValue(lines, patterns) {
             if (!value && index + 1 < lines.length) {
                 const nextLine = cleanValue(lines[index + 1]);
 
-                if (nextLine && !ANY_KNOWN_LABEL.test(nextLine)) {
+                if (nextLine && !isKnownLabel(nextLine)) {
                     value = nextLine;
                 }
             }
@@ -141,7 +191,7 @@ function extractCompositionIngredient(lines) {
     ) {
         const line = cleanValue(lines[index]);
 
-        if (!line || ANY_KNOWN_LABEL.test(line)) continue;
+        if (!line || isKnownLabel(line)) continue;
 
         const ingredient = simplifyIngredient(line);
 
@@ -158,42 +208,49 @@ function extractCompositionIngredient(lines) {
 }
 
 function findPossibleMedicineName(lines) {
-    const labelledName = extractLabeledValue(
-        lines,
-        FIELD_PATTERNS.name
-    );
-
-    if (labelledName) return labelledName;
+    const strengthPattern = /\b\d+(?:\.\d+)?\s*(?:mg|mcg|µg|g|ml|iu)\b/i;
+    const contextPattern = /\b(?:composition|active ingredients?|generic|contains)\b/i;
 
     const candidates = [];
 
-    for (const line of lines) {
+    for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
         const candidate = cleanValue(line);
 
         if (!candidate || ANY_KNOWN_LABEL.test(candidate)) continue;
 
+        // An unlabelled word is not enough evidence to call a medicine name.
+        // Keep only a product-like line adjacent to a printed strength; the
+        // merger requires the same candidate in at least two clear photos.
+        const nearbyLines = lines.slice(Math.max(0, index - 2), index + 3);
+        if (!nearbyLines.some((nearbyLine) => strengthPattern.test(nearbyLine))) continue;
+        if (nearbyLines.some((nearbyLine) => contextPattern.test(nearbyLine))) continue;
+
+        const namePart = candidate.replace(/\s+\d+(?:\.\d+)?\s*(?:mg|mcg|µg|g|ml|iu)\b.*$/i, "").trim();
+
         if (
-            /\b(?:tablets?|capsules?|analgesic|antipyretic|dosage|contains|store|keep|mg|mcg|ml|IP|BP|USP)\b/i.test(candidate)
+            !namePart ||
+            /\b(?:tablets?|capsules?|analgesic|antipyretic|dosage|contains|store|keep|mg|mcg|ml|IP|BP|USP)\b/i.test(namePart)
         ) {
             continue;
         }
 
-        if (!/[a-zA-Z]{3,}/.test(candidate)) continue;
+        if (!/[a-zA-Z]{4,}/.test(namePart)) continue;
 
-        if (/^[\d\s./-]+$/.test(candidate)) continue;
+        if (/^[\d\s./-]+$/.test(namePart)) continue;
 
         // A short product-like name containing a strength number
         // is a better candidate than a generic descriptive line.
         let score = 0;
 
         if (/\d{2,4}\b/.test(candidate)) score += 5;
-        if (/^[A-Za-z][A-Za-z0-9-]*(?:\s+[A-Za-z0-9-]+){0,3}$/.test(candidate)) {
+        if (/^[A-Za-z][A-Za-z0-9-]*(?:\s+[A-Za-z0-9-]+){0,3}$/.test(namePart)) {
             score += 2;
         }
 
-        if (candidate.length > 45) score -= 3;
+        if (namePart.length > 45) score -= 3;
 
-        candidates.push({ value: candidate, score });
+        candidates.push({ value: namePart, score });
     }
 
     candidates.sort((a, b) => b.score - a.score);
@@ -206,7 +263,7 @@ function findPossibleMedicineName(lines) {
  * Values are suggestions only and must be checked against
  * the physical package. Barcode values are supplied by ZXing, never by OCR.
  */
-export function parseMedicineText(rawText) {
+export function parseMedicineText(rawText, { allowUnlabelledName = false } = {}) {
     const emptyFields = {
         name: "",
         genericName: "",
@@ -214,6 +271,8 @@ export function parseMedicineText(rawText) {
         category: "",
         batchNumber: "",
         expiryText: "",
+        mrpText: "",
+        manufacturingDate: "",
         barcode: "",
     };
 
@@ -247,6 +306,14 @@ export function parseMedicineText(rawText) {
         FIELD_PATTERNS.category
     );
 
+    const manufacturingDateText = extractLabeledValue(
+        lines,
+        FIELD_PATTERNS.manufacturingDate
+    );
+    const manufacturingDate = normalizeExpiryDate(manufacturingDateText).date
+        ? manufacturingDateText
+        : "";
+
     const inferredCategory =
         /\bcapsules?\b/i.test(lines.join("\n"))
             ? "Capsule"
@@ -257,7 +324,9 @@ export function parseMedicineText(rawText) {
     return {
         ...emptyFields,
 
-        name: findPossibleMedicineName(lines),
+        name:
+            extractLabeledValue(lines, FIELD_PATTERNS.name) ||
+            (allowUnlabelledName ? findPossibleMedicineName(lines) : ""),
 
         genericName,
 
@@ -268,15 +337,19 @@ export function parseMedicineText(rawText) {
 
         category: explicitCategory || inferredCategory,
 
-        batchNumber: extractLabeledValue(
-            lines,
-            FIELD_PATTERNS.batchNumber
-        ),
+        batchNumber: extractBatchNumber(lines),
 
         expiryText: extractLabeledValue(
             lines,
             FIELD_PATTERNS.expiryText
         ),
+
+        mrpText: extractLabeledValue(
+            lines,
+            FIELD_PATTERNS.mrpText
+        ),
+
+        manufacturingDate,
 
         barcode: "",
     };

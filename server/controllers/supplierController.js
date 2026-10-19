@@ -27,10 +27,13 @@ export const createSupplier = async (req, res) => {
             "phone",
             "email",
             "address",
-            "returnPolicy"
+            "returnPolicy",
+            "defaultInventoryLocation"
         ];
         if (stringFields.some((field) =>
-            body[field] !== undefined && typeof body[field] !== "string"
+            body[field] !== undefined &&
+            body[field] !== null &&
+            typeof body[field] !== "string"
         )) {
             return res.status(400).json({
                 message: "Supplier details must be text values"
@@ -43,8 +46,33 @@ export const createSupplier = async (req, res) => {
             phone,
             email,
             address,
-            returnPolicy
+            returnPolicy,
+            defaultReturnWindowDays,
+            defaultInventoryLocation
         } = body;
+
+        if (
+            defaultReturnWindowDays !== undefined &&
+            defaultReturnWindowDays !== null &&
+            defaultReturnWindowDays !== "" &&
+            (typeof defaultReturnWindowDays !== "number" ||
+                !Number.isFinite(defaultReturnWindowDays) ||
+                defaultReturnWindowDays < 0)
+        ) {
+            return res.status(400).json({
+                message: "Default return window must be a valid non-negative number"
+            });
+        }
+
+        if (
+            defaultInventoryLocation !== undefined &&
+            defaultInventoryLocation !== null &&
+            typeof defaultInventoryLocation !== "string"
+        ) {
+            return res.status(400).json({
+                message: "Default inventory location must be text"
+            });
+        }
 
         // Trim values
         name = name?.trim();
@@ -53,6 +81,7 @@ export const createSupplier = async (req, res) => {
         email = email?.trim().toLowerCase();
         address = address?.trim();
         returnPolicy = returnPolicy?.trim();
+        defaultInventoryLocation = defaultInventoryLocation?.trim();
 
         // Required field validation
         if (!name) {
@@ -116,6 +145,14 @@ export const createSupplier = async (req, res) => {
             email,
             address,
             returnPolicy,
+            ...(defaultReturnWindowDays !== undefined &&
+            defaultReturnWindowDays !== null &&
+            defaultReturnWindowDays !== ""
+                ? { defaultReturnWindowDays }
+                : {}),
+            ...(defaultInventoryLocation
+                ? { defaultInventoryLocation }
+                : {}),
             createdBy: req.userId
         });
 
@@ -285,10 +322,13 @@ export const updateSupplier = async (req, res) => {
             "phone",
             "email",
             "address",
-            "returnPolicy"
+            "returnPolicy",
+            "defaultInventoryLocation"
         ];
         if (stringFields.some((field) =>
-            body[field] !== undefined && typeof body[field] !== "string"
+            body[field] !== undefined &&
+            body[field] !== null &&
+            typeof body[field] !== "string"
         )) {
             return res.status(400).json({
                 message: "Supplier details must be text values"
@@ -301,8 +341,33 @@ export const updateSupplier = async (req, res) => {
             phone,
             email,
             address,
-            returnPolicy
+            returnPolicy,
+            defaultReturnWindowDays,
+            defaultInventoryLocation
         } = body;
+
+        if (
+            defaultReturnWindowDays !== undefined &&
+            defaultReturnWindowDays !== null &&
+            defaultReturnWindowDays !== "" &&
+            (typeof defaultReturnWindowDays !== "number" ||
+                !Number.isFinite(defaultReturnWindowDays) ||
+                defaultReturnWindowDays < 0)
+        ) {
+            return res.status(400).json({
+                message: "Default return window must be a valid non-negative number"
+            });
+        }
+
+        if (
+            defaultInventoryLocation !== undefined &&
+            defaultInventoryLocation !== null &&
+            typeof defaultInventoryLocation !== "string"
+        ) {
+            return res.status(400).json({
+                message: "Default inventory location must be text"
+            });
+        }
 
         // -----------------------------
         // Name
@@ -402,6 +467,20 @@ export const updateSupplier = async (req, res) => {
 
             supplier.returnPolicy =
                 returnPolicy;
+        }
+
+        if (defaultReturnWindowDays !== undefined) {
+            supplier.defaultReturnWindowDays =
+                defaultReturnWindowDays === null || defaultReturnWindowDays === ""
+                    ? undefined
+                    : defaultReturnWindowDays;
+        }
+
+        if (defaultInventoryLocation !== undefined) {
+            supplier.defaultInventoryLocation =
+                defaultInventoryLocation === null || !defaultInventoryLocation.trim()
+                    ? undefined
+                    : defaultInventoryLocation.trim();
         }
 
         await supplier.save();

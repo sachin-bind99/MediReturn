@@ -201,6 +201,17 @@ test(
                 location: "Staff test shelf",
                 createdBy: staffA._id
             });
+            const crossOwnedInventoryForMedicineA = await Inventory.create({
+                medicine: medicineA._id,
+                supplier: supplierB._id,
+                batchNumber: `CROSS-${suffix}`,
+                quantity: 3,
+                purchasePrice: 999,
+                expiryDate: new Date(Date.now() + 30 * 86400000),
+                returnWindowDays: 10,
+                location: "Foreign owner shelf",
+                createdBy: ownerB._id
+            });
 
             const [returnA, protectedReturnA, returnB, returnStaffA] = await Return.create([
                 {
@@ -297,6 +308,39 @@ test(
                     assert.ok(serialized.includes(String(ownId)), path);
                     assert.ok(!serialized.includes(String(foreignId)), path);
                 }
+
+                const ownerAMedicines = await callApi("/medicines", {
+                    token: sessions[ownerA.email]
+                });
+                const medicineASummary = ownerAMedicines.data.medicines.find(
+                    (medicine) => String(medicine._id) === String(medicineA._id)
+                )?.inventorySummary;
+                assert.equal(ownerAMedicines.response.status, 200);
+                assert.equal(medicineASummary.inventoryBatchCount, 1);
+                assert.equal(medicineASummary.latestBatchNumber, inventoryA.batchNumber);
+                assert.equal(medicineASummary.latestPurchasePrice, inventoryA.purchasePrice);
+                assert.notEqual(
+                    medicineASummary.latestBatchNumber,
+                    crossOwnedInventoryForMedicineA.batchNumber
+                );
+
+                const ownMedicineBatches = await callApi(
+                    `/inventory?medicineId=${medicineA._id}&sortBy=createdAt&order=desc`,
+                    { token: sessions[ownerA.email] }
+                );
+                assert.equal(ownMedicineBatches.response.status, 200);
+                assert.ok(
+                    ownMedicineBatches.data.data.some(
+                        (batch) => String(batch._id) === String(inventoryA._id)
+                    )
+                );
+
+                const foreignMedicineBatches = await callApi(
+                    `/inventory?medicineId=${medicineA._id}`,
+                    { token: sessions[ownerB.email] }
+                );
+                assert.equal(foreignMedicineBatches.response.status, 200);
+                assert.deepEqual(foreignMedicineBatches.data.data, []);
             });
 
             await t.test("foreign return IDs are denied for owners and staff", async () => {
@@ -492,6 +536,8 @@ test(
                         email: `created-${suffix}@example.test`,
                         address: "Test Address",
                         returnPolicy: "Test policy",
+                        defaultReturnWindowDays: 30,
+                        defaultInventoryLocation: "Shelf B-4",
                         createdBy: String(ownerA._id)
                     }
                 });
@@ -500,6 +546,39 @@ test(
                     supplierResult.data.supplier._id
                 );
                 assert.equal(String(createdSupplier.createdBy), String(ownerB._id));
+                assert.equal(createdSupplier.defaultReturnWindowDays, 30);
+                assert.equal(createdSupplier.defaultInventoryLocation, "Shelf B-4");
+
+                const invalidSupplierDefault = await callApi(
+                    `/suppliers/${createdSupplier._id}`,
+                    {
+                        token: sessions[ownerB.email],
+                        method: "PUT",
+                        body: { defaultReturnWindowDays: -1 }
+                    }
+                );
+                assert.equal(invalidSupplierDefault.response.status, 400);
+
+                const updatedSupplierDefaults = await callApi(
+                    `/suppliers/${createdSupplier._id}`,
+                    {
+                        token: sessions[ownerB.email],
+                        method: "PUT",
+                        body: {
+                            defaultReturnWindowDays: 0,
+                            defaultInventoryLocation: "  Updated shelf  "
+                        }
+                    }
+                );
+                assert.equal(updatedSupplierDefaults.response.status, 200);
+                assert.equal(updatedSupplierDefaults.data.supplier.defaultReturnWindowDays, 0);
+                assert.equal(updatedSupplierDefaults.data.supplier.defaultInventoryLocation, "Updated shelf");
+
+                const foreignSupplierRead = await callApi(
+                    `/suppliers/${createdSupplier._id}`,
+                    { token: sessions[ownerA.email] }
+                );
+                assert.equal(foreignSupplierRead.response.status, 404);
 
                 const inventoryResult = await callApi("/inventory", {
                     token: sessions[ownerB.email],

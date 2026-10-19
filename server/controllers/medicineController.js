@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import Medicine from "../models/Medicine.js";
+import Inventory from "../models/Inventory.js";
+import { buildMedicineInventorySummaries } from "../utils/medicineInventorySummary.js";
 
 
 // ----------------------------------------
@@ -152,9 +154,28 @@ export const getMedicines = async (req, res) => {
             .populate("createdBy", "name email role")
             .sort({ createdAt: -1 });
 
+        const medicineIds = medicines.map((medicine) => medicine._id);
+        const inventoryRecords = medicineIds.length > 0
+            ? await Inventory.find({
+                createdBy: req.userId,
+                medicine: { $in: medicineIds },
+            })
+                .select("medicine batchNumber purchasePrice expiryDate createdAt")
+                .sort({ createdAt: -1, _id: -1 })
+                .lean()
+            : [];
+        const inventorySummaries = buildMedicineInventorySummaries(
+            medicines,
+            inventoryRecords
+        );
+        const medicinesWithInventorySummaries = medicines.map((medicine) => ({
+            ...medicine.toObject(),
+            inventorySummary: inventorySummaries.get(String(medicine._id)),
+        }));
+
         return res.status(200).json({
-            count: medicines.length,
-            medicines
+            count: medicinesWithInventorySummaries.length,
+            medicines: medicinesWithInventorySummaries
         });
 
     } catch (error) {

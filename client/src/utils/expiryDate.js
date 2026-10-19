@@ -35,7 +35,7 @@ export function normalizeExpiryDate(rawValue) {
 
     // Remove an optional expiry label.
     value = value.replace(
-        /^(?:(?:EXP(?:IRY|IRATION)?|USE BEFORE|BEST BEFORE)\s*(?:DATE)?\s*[:=-]?\s*)/i,
+        /^(?:(?:EXP\.?(?:IRY|IRATION)?\.?|USE BEFORE|BEST BEFORE)\s*(?:DATE|DT)?\s*[:=-]?\s*)/i,
         ""
     ).trim();
 

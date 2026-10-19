@@ -638,7 +638,7 @@ function Dashboard({ user }) {
                             </svg>
 
                             {unreadAlertCount > 0 && (
-                                <span className="absolute -right-1 -top-1 grid min-w-5 h-5 place-items-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                                <span className="absolute -right-1 -top-1 grid min-w-5 h-5 place-items-center rounded-full bg-danger-button px-1 text-[10px] font-bold text-white">
                                     {unreadAlertCount > 99
                                         ? "99+"
                                         : unreadAlertCount}
@@ -1114,7 +1114,7 @@ function Dashboard({ user }) {
                                                     }
                                                 </p>
 
-                                                <p className="mt-2 text-xs leading-5 text-slate-400">
+                                                <p className="mt-2 text-[13px] leading-5 text-muted">
                                                     {
                                                         metric.note
                                                     }
@@ -1165,7 +1165,7 @@ function Dashboard({ user }) {
                                                 )}
                                             </p>
 
-                                            <p className="mt-2 text-xs leading-5 text-slate-400">
+                                            <p className="mt-2 text-[13px] leading-5 text-muted">
                                                 {
                                                     metric.note
                                                 }
@@ -1234,7 +1234,7 @@ function Dashboard({ user }) {
                                     <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">
                                         ₹{formatCurrency(returnSummary.totalReturnValue)}
                                     </p>
-                                    <p className="mt-3 text-xs leading-5 text-slate-400">
+                                    <p className="mt-3 text-[13px] leading-5 text-muted">
                                         Value of all recorded return requests
                                     </p>
                                 </article>
@@ -1447,13 +1447,18 @@ function Dashboard({ user }) {
                                             <CartesianGrid
                                                 strokeDasharray="3 3"
                                                 vertical={false}
+                                                stroke="var(--color-line)"
                                             />
 
                                             <XAxis
                                                 dataKey="name"
                                                 tick={{
-                                                    fontSize: 12
+                                                    fontSize: 13,
+                                                    fontWeight: 500,
+                                                    fill: "var(--color-muted)"
                                                 }}
+                                                tickMargin={8}
+                                                minTickGap={8}
                                                 axisLine={false}
                                                 tickLine={false}
                                             />
@@ -1461,7 +1466,9 @@ function Dashboard({ user }) {
                                             <YAxis
                                                 allowDecimals={false}
                                                 tick={{
-                                                    fontSize: 12
+                                                    fontSize: 13,
+                                                    fontWeight: 500,
+                                                    fill: "var(--color-muted)"
                                                 }}
                                                 axisLine={false}
                                                 tickLine={false}
@@ -1469,14 +1476,28 @@ function Dashboard({ user }) {
 
                                             <Tooltip
                                                 cursor={{
-                                                    fill: "rgba(82, 141, 117, 0.1)"
+                                                    fill: "rgba(66, 131, 106, 0.12)"
+                                                }}
+                                                contentStyle={{
+                                                    backgroundColor: "var(--color-panel)",
+                                                    border: "1px solid var(--color-line)",
+                                                    borderRadius: "12px",
+                                                    color: "var(--color-ink)",
+                                                }}
+                                                labelStyle={{
+                                                    color: "var(--color-ink)",
+                                                    fontWeight: 600,
+                                                }}
+                                                itemStyle={{
+                                                    color: "var(--color-muted)",
+                                                    fontWeight: 500,
                                                 }}
                                             />
 
                                             <Bar
                                                 dataKey="count"
                                                 name="Batches"
-                                                fill="#528d75"
+                                                fill="#42836a"
                                                 radius={[
                                                     8,
                                                     8,
@@ -1489,7 +1510,7 @@ function Dashboard({ user }) {
                                     </ResponsiveContainer>
                                 </div>
 
-                                <p className="mt-3 text-xs leading-5 text-slate-400">
+                                <p className="mt-3 text-[13px] leading-5 text-muted">
                                     Status indicators can overlap when a batch is both expired and past its return deadline.
                                 </p>
                             </section>

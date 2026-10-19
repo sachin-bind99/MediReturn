@@ -48,3 +48,10 @@ export const resetPasswordLimiter = createAuthLimiter(
     10,
     "Too many password-reset attempts. Please try again later."
 );
+
+// Vision analysis uses a separate limit because provider calls have a cost.
+export const medicineVisionLimiter = createAuthLimiter(
+    15 * 60 * 1000,
+    20,
+    "Too many image analysis requests. Please try again in 15 minutes."
+);

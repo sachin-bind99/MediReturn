@@ -7,6 +7,33 @@ import MedicineForm from "../components/medicine/MedicineForm";
 
 const inputClass = "h-12 w-full rounded-xl border border-line bg-panel px-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-mint-500 focus:ring-4 focus:ring-mint-100";
 
+const formatInventoryPrice = (value) => {
+    if (value === null || value === undefined || value === "") return "—";
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) return "—";
+
+    return `₹${new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(amount)}`;
+};
+
+const formatInventoryExpiry = (value) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value ?? ""))) return "—";
+    const date = new Date(`${value}T00:00:00.000Z`);
+    if (
+        Number.isNaN(date.getTime()) ||
+        date.toISOString().slice(0, 10) !== value
+    ) return "—";
+
+    return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC",
+    });
+};
+
 function Medicines() {
 
     const [medicines, setMedicines] = useState([]);
@@ -420,11 +447,11 @@ function Medicines() {
 
                         <div className="overflow-x-auto">
 
-                            <table className="w-full min-w-[720px] text-left">
+                            <table className="w-full min-w-[1120px] text-left">
 
-                                <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                                <thead className="bg-slate-50/80 text-xs font-bold uppercase tracking-[0.12em] text-muted">
 
-                                    <tr><th className="px-6 py-3.5">Medicine</th><th className="px-6 py-3.5">Manufacturer</th><th className="px-6 py-3.5">Category</th><th className="px-6 py-3.5">Barcode</th><th className="px-6 py-3.5 text-right">Actions</th></tr>
+                                    <tr><th className="px-6 py-3.5">Medicine</th><th className="px-6 py-3.5">Manufacturer</th><th className="px-6 py-3.5">Category</th><th className="px-6 py-3.5">Barcode</th><th className="px-6 py-3.5">Latest price</th><th className="px-6 py-3.5">Latest batch</th><th className="px-6 py-3.5">Next expiry</th><th className="px-6 py-3.5">Batches</th><th className="px-6 py-3.5 text-right">Actions</th></tr>
 
                                 </thead>
 
@@ -462,6 +489,10 @@ function Medicines() {
 
                                                         </p>
 
+                                                        {!(medicine.inventorySummary?.inventoryBatchCount > 0) && (
+                                                            <p className="mt-1 text-xs font-medium text-slate-400">No inventory yet</p>
+                                                        )}
+
                                                     </div>
 
                                                 </div>
@@ -473,6 +504,22 @@ function Medicines() {
                                             <td className="px-6 py-4"><span className="inline-flex rounded-full bg-mint-50 px-2.5 py-1 text-xs font-semibold text-mint-800">{medicine.category}</span></td>
 
                                             <td className="px-6 py-4 font-mono text-xs text-muted">{medicine.barcode || "—"}</td>
+
+                                            <td className="px-6 py-4 text-sm font-medium text-slate-700">{formatInventoryPrice(medicine.inventorySummary?.latestPurchasePrice)}</td>
+
+                                            <td className="px-6 py-4 font-mono text-xs text-slate-600">{medicine.inventorySummary?.latestBatchNumber || "—"}</td>
+
+                                            <td className="px-6 py-4 text-sm text-slate-600">
+                                                {medicine.inventorySummary?.inventoryBatchCount > 0
+                                                    ? medicine.inventorySummary.nextExpiryDate
+                                                        ? formatInventoryExpiry(medicine.inventorySummary.nextExpiryDate)
+                                                        : "No upcoming expiry"
+                                                    : "—"}
+                                            </td>
+
+                                            <td className="px-6 py-4 text-sm text-slate-600">
+                                                {medicine.inventorySummary?.inventoryBatchCount ?? 0}
+                                            </td>
 
                                             <td className="px-6 py-4"><div className="flex justify-end gap-2">
 
@@ -486,7 +533,7 @@ function Medicines() {
 
                                     )) : (
 
-                                        <tr><td colSpan="5" className="px-6 py-16 text-center">
+                                        <tr><td colSpan="9" className="px-6 py-16 text-center">
 
                                             <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-slate-50 text-slate-400"><svg viewBox="0 0 20 20" className="size-5" fill="none" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.3" stroke="currentColor" strokeWidth="1.6"/><path d="m12.7 12.7 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></span>
 
@@ -516,7 +563,7 @@ function Medicines() {
 
                 <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-950/45 p-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) handleCancelDelete(); }}>
 
-                    <section className="w-full max-w-md rounded-3xl border border-white/60 bg-panel p-6 shadow-2xl shadow-slate-950/25 sm:p-7" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+                    <section className="w-full max-w-md rounded-3xl border border-line bg-panel p-6 shadow-2xl shadow-slate-950/25 sm:p-7" role="dialog" aria-modal="true" aria-labelledby="delete-title">
 
                         <span className="grid size-12 place-items-center rounded-2xl bg-rose-50 text-rose-600"><svg viewBox="0 0 20 20" className="size-5" fill="none" aria-hidden="true"><path d="M4.5 6h11m-9.5 0 .6 10h6.8l.6-10M8 6V4h4v2m-3 3v4m2-4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
 
@@ -538,7 +585,7 @@ function Medicines() {
 
                             <button type="button" className="h-11 rounded-xl border border-line px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50" onClick={handleCancelDelete} disabled={deleting}>Keep medicine</button>
 
-                            <button type="button" className="h-11 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-wait disabled:opacity-50" onClick={handleDeleteMedicine} disabled={deleting}>{deleting ? "Deleting…" : "Delete medicine"}</button>
+                            <button type="button" className="h-11 rounded-xl bg-danger-button px-4 text-sm font-semibold text-white transition hover:bg-danger-button-hover disabled:cursor-wait disabled:opacity-50" onClick={handleDeleteMedicine} disabled={deleting}>{deleting ? "Deleting…" : "Delete medicine"}</button>
 
                         </div>
 

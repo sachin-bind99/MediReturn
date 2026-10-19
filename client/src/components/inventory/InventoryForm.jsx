@@ -1,6 +1,16 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import api from "../../lib/api";
+import {
+  applyAvailableSuggestions,
+  clearAutomaticSuggestions,
+  findDuplicateBatch,
+  getSupplierAddress,
+  getLatestBatchSuggestions,
+  getSupplierDefaultSuggestions,
+  MEDICINE_SUGGESTION_FIELDS,
+  SUPPLIER_SUGGESTION_FIELDS,
+} from "../../utils/inventorySuggestions.js";
 
 
 
@@ -132,6 +142,8 @@ function InventoryForm({
 
   onCancel,
 
+  onOpenExistingBatch,
+
 }) {
 
   const [medicines, setMedicines] = useState([]);
@@ -140,9 +152,21 @@ function InventoryForm({
 
 
 
-  const [formData, setFormData] = useState(() =>
-    getInitialFormData(inventory, initialValues)
+  const initialFormData = getInitialFormData(inventory, initialValues);
+  const [formData, setFormData] = useState(initialFormData);
+  const formDataRef = useRef(initialFormData);
+  const manualFieldsRef = useRef(new Set());
+  const automaticValuesRef = useRef({});
+  const medicineRequestVersionRef = useRef(0);
+  const initialMedicineIdRef = useRef(getId(initialValues?.medicine));
+  const initialValuesRef = useRef(initialValues || {});
+  const [automaticValues, setAutomaticValues] = useState({});
+  const [fieldSuggestions, setFieldSuggestions] = useState({});
+  const [existingMedicineBatches, setExistingMedicineBatches] = useState([]);
+  const [loadingBatchSuggestions, setLoadingBatchSuggestions] = useState(() =>
+    Boolean(initialFormData.medicine && !inventory)
   );
+  const [batchSuggestionError, setBatchSuggestionError] = useState("");
 
 
 
@@ -153,6 +177,26 @@ function InventoryForm({
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState("");
+  const selectedSupplier = suppliers.find(
+    (supplier) => supplier._id === formData.supplier
+  );
+
+  const commitFormData = useCallback((nextValues) => {
+    formDataRef.current = nextValues;
+    setFormData(nextValues);
+  }, []);
+
+  const applyFormSuggestions = useCallback((suggestions) => {
+    const result = applyAvailableSuggestions({
+      currentValues: formDataRef.current,
+      suggestions,
+      manuallyEditedFields: manualFieldsRef.current,
+      automaticValues: automaticValuesRef.current,
+    });
+    automaticValuesRef.current = result.automaticValues;
+    setAutomaticValues(result.automaticValues);
+    commitFormData(result.values);
+  }, [commitFormData]);
 
 
 
@@ -252,6 +296,71 @@ function InventoryForm({
 
 
 
+  // Load this user's batches for the selected medicine. The inventory API
+  // scopes results to the authenticated account and returns the newest batch
+  // first when sorted by creation date.
+  useEffect(() => {
+    const medicineId = formData.medicine;
+    if (inventory || !medicineId) {
+      return undefined;
+    }
+
+    let active = true;
+    const requestVersion = medicineRequestVersionRef.current;
+
+    const fetchMedicineBatches = async () => {
+      try {
+        const response = await api.get("/inventory", {
+          params: {
+            medicineId,
+            sortBy: "createdAt",
+            order: "desc",
+          },
+        });
+        if (!active || requestVersion !== medicineRequestVersionRef.current) return;
+
+        const batches = response.data?.data ?? response.data?.inventories ?? [];
+        const safeBatches = Array.isArray(batches) ? batches : [];
+        setExistingMedicineBatches(safeBatches);
+
+        const values = getLatestBatchSuggestions(safeBatches);
+        const normalizedValues = Object.fromEntries(
+          Object.entries(values).map(([field, value]) => [
+            field,
+            field === "expiryDate" ? normalizeExpiryDate(value) : String(value),
+          ])
+        );
+        setFieldSuggestions((current) => {
+          const next = { ...current };
+          for (const field of MEDICINE_SUGGESTION_FIELDS) delete next[field];
+          for (const [field, value] of Object.entries(normalizedValues)) {
+            next[field] = { value, source: "previous batch" };
+          }
+          return next;
+        });
+        applyFormSuggestions(normalizedValues);
+      } catch (requestError) {
+        if (!active || requestVersion !== medicineRequestVersionRef.current) return;
+        setExistingMedicineBatches([]);
+        setBatchSuggestionError(
+          requestError.response?.data?.message ||
+            "Previous batch suggestions could not be loaded."
+        );
+      } finally {
+        if (active && requestVersion === medicineRequestVersionRef.current) {
+          setLoadingBatchSuggestions(false);
+        }
+      }
+    };
+
+    fetchMedicineBatches();
+    return () => {
+      active = false;
+    };
+  }, [applyFormSuggestions, formData.medicine, inventory]);
+
+
+
   // --------------------------------
 
   // Handle input changes
@@ -259,19 +368,142 @@ function InventoryForm({
   // --------------------------------
 
   const handleChange = (e) => {
-
     const { name, value } = e.target;
+    manualFieldsRef.current.add(name);
 
+    if (automaticValuesRef.current[name] !== undefined) {
+      const nextAutomaticValues = { ...automaticValuesRef.current };
+      delete nextAutomaticValues[name];
+      automaticValuesRef.current = nextAutomaticValues;
+      setAutomaticValues(nextAutomaticValues);
+    }
 
+    commitFormData({ ...formDataRef.current, [name]: value });
+  };
 
-    setFormData((prev) => ({
+  const handleMedicineChange = (e) => {
+    const medicineId = e.target.value;
+    const previousMedicineId = formDataRef.current.medicine;
+    if (medicineId === previousMedicineId) return;
+    medicineRequestVersionRef.current += 1;
 
-      ...prev,
+    const cleared = clearAutomaticSuggestions({
+      currentValues: formDataRef.current,
+      automaticValues: automaticValuesRef.current,
+      fields: MEDICINE_SUGGESTION_FIELDS,
+      manuallyEditedFields: manualFieldsRef.current,
+    });
+    const nextValues = { ...cleared.values, medicine: medicineId };
 
-      [name]: value,
+    // Scanner values belong to the medicine selected in the scanner. Clear
+    // untouched batch-specific values if the user changes that medicine.
+    if (
+      previousMedicineId &&
+      medicineId !== previousMedicineId &&
+      initialMedicineIdRef.current === previousMedicineId
+    ) {
+      for (const field of MEDICINE_SUGGESTION_FIELDS) {
+        const initialValue = initialValuesRef.current[field];
+        const normalizedInitialValue = field === "expiryDate"
+          ? normalizeExpiryDate(initialValue)
+          : initialValue == null ? "" : String(initialValue);
+        if (
+          !manualFieldsRef.current.has(field) &&
+          normalizedInitialValue !== "" &&
+          String(nextValues[field] ?? "") === normalizedInitialValue
+        ) {
+          nextValues[field] = "";
+        }
+      }
+    }
 
-    }));
+    automaticValuesRef.current = cleared.automaticValues;
+    setAutomaticValues(cleared.automaticValues);
+    commitFormData(nextValues);
+    setExistingMedicineBatches([]);
+    setLoadingBatchSuggestions(Boolean(medicineId));
+    setBatchSuggestionError("");
+    setFieldSuggestions((current) => {
+      const next = { ...current };
+      for (const field of MEDICINE_SUGGESTION_FIELDS) delete next[field];
+      return next;
+    });
+  };
 
+  const handleSupplierChange = (e) => {
+    const supplierId = e.target.value;
+    const cleared = clearAutomaticSuggestions({
+      currentValues: formDataRef.current,
+      automaticValues: automaticValuesRef.current,
+      fields: SUPPLIER_SUGGESTION_FIELDS,
+      manuallyEditedFields: manualFieldsRef.current,
+    });
+    automaticValuesRef.current = cleared.automaticValues;
+    setAutomaticValues(cleared.automaticValues);
+    commitFormData({ ...cleared.values, supplier: supplierId });
+
+    const supplier = suppliers.find((item) => item._id === supplierId);
+    const values = Object.fromEntries(
+      Object.entries(getSupplierDefaultSuggestions(supplier)).map(([field, value]) => [
+        field,
+        String(value),
+      ])
+    );
+    setFieldSuggestions((current) => {
+      const next = { ...current };
+      for (const field of SUPPLIER_SUGGESTION_FIELDS) delete next[field];
+      for (const [field, value] of Object.entries(values)) {
+        next[field] = { value, source: "supplier default" };
+      }
+      return next;
+    });
+    applyFormSuggestions(values);
+  };
+
+  const handleUseSuggestion = (field) => {
+    const suggestion = fieldSuggestions[field];
+    if (!suggestion) return;
+
+    manualFieldsRef.current.delete(field);
+    const nextValue = suggestion.value;
+    const nextAutomaticValues = {
+      ...automaticValuesRef.current,
+      [field]: nextValue,
+    };
+    automaticValuesRef.current = nextAutomaticValues;
+    setAutomaticValues(nextAutomaticValues);
+    commitFormData({ ...formDataRef.current, [field]: nextValue });
+  };
+
+  const renderSuggestion = (field) => {
+    const suggestion = fieldSuggestions[field];
+    if (!suggestion) return null;
+
+    const isApplied = automaticValues[field] !== undefined &&
+      String(formData[field] ?? "") === automaticValues[field];
+    if (isApplied) {
+      return (
+        <p className="mt-1 text-xs text-amber-700">
+          Suggested from a {suggestion.source}; verify this value for the new batch.
+        </p>
+      );
+    }
+
+    return (
+      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-amber-700">
+        <span>
+          {suggestion.source === "previous batch" ? "Previous batch" : "Supplier default"} suggestion: {suggestion.value}. Verify before using.
+        </span>
+        <button
+          type="button"
+          onClick={() => handleUseSuggestion(field)}
+          disabled={loading}
+          className="font-semibold underline disabled:opacity-50"
+        >
+          Use suggestion
+        </button>
+      </div>
+    );
   };
 
 
@@ -414,6 +646,11 @@ function InventoryForm({
 
     setError("");
 
+    if (duplicateInventory) {
+      setError("This medicine already has a batch with that number. Open the existing batch to update it.");
+      return;
+    }
+
 
 
     const validationError = validateForm();
@@ -522,9 +759,16 @@ function InventoryForm({
 
 
 
-  const formIsLoading =
+  const duplicateInventory = !inventory
+    ? findDuplicateBatch(
+        existingMedicineBatches,
+        formData.medicine,
+        formData.batchNumber
+      )
+    : null;
 
-    loading || loadingMedicines || loadingSuppliers;
+  const formIsLoading =
+    loading || loadingMedicines || loadingSuppliers || loadingBatchSuggestions;
 
 
 
@@ -553,6 +797,45 @@ function InventoryForm({
         </div>
 
       )}
+
+      {duplicateInventory && (
+        <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="alert">
+          <p>
+            Batch {duplicateInventory.batchNumber} already exists for this medicine. Open the saved batch to review or update it instead of creating a duplicate.
+          </p>
+          {onOpenExistingBatch && (
+            <button
+              type="button"
+              onClick={() => onOpenExistingBatch(duplicateInventory)}
+              className="mt-2 font-semibold underline"
+            >
+              Open existing batch
+            </button>
+          )}
+        </div>
+      )}
+
+      {batchSuggestionError && (
+        <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800" role="status">
+          {batchSuggestionError} The server will still check for duplicate batches when you save.
+        </p>
+      )}
+
+      {loadingBatchSuggestions && (
+        <p className="mb-4 text-sm text-muted" role="status">
+          Checking your saved batches for suggestions…
+        </p>
+      )}
+
+      {!inventory &&
+        formData.medicine &&
+        !loadingBatchSuggestions &&
+        !batchSuggestionError &&
+        existingMedicineBatches.length === 0 && (
+          <p className="mb-4 text-sm text-muted" role="status">
+            No previous batch is saved for this medicine. Batch number, price, and expiry suggestions are left empty.
+          </p>
+        )}
 
 
 
@@ -584,7 +867,7 @@ function InventoryForm({
 
             value={formData.medicine}
 
-            onChange={handleChange}
+            onChange={handleMedicineChange}
 
             disabled={Boolean(inventory) || loadingMedicines || loading}
 
@@ -654,7 +937,7 @@ function InventoryForm({
 
             value={formData.supplier}
 
-            onChange={handleChange}
+            onChange={handleSupplierChange}
 
             disabled={Boolean(inventory) || loadingSuppliers || loading}
 
@@ -681,6 +964,20 @@ function InventoryForm({
             ))}
 
           </select>
+
+
+
+          {selectedSupplier && (
+            <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" aria-live="polite">
+              <p className="text-xs font-semibold text-slate-600">Supplier address</p>
+              <p className="mt-0.5 text-slate-700">
+                {getSupplierAddress(selectedSupplier) || "No supplier address recorded."}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                This postal address is separate from the pharmacy storage location.
+              </p>
+            </div>
+          )}
 
 
 
@@ -747,6 +1044,8 @@ function InventoryForm({
             </p>
 
           )}
+
+          {renderSuggestion("batchNumber")}
 
         </div>
 
@@ -838,6 +1137,8 @@ function InventoryForm({
 
           />
 
+          {renderSuggestion("purchasePrice")}
+
         </div>
 
 
@@ -877,6 +1178,8 @@ function InventoryForm({
             className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-mint-500"
 
           />
+
+          {renderSuggestion("expiryDate")}
 
         </div>
 
@@ -922,6 +1225,8 @@ function InventoryForm({
 
           />
 
+          {renderSuggestion("returnWindowDays")}
+
         </div>
 
 
@@ -964,6 +1269,8 @@ function InventoryForm({
 
           />
 
+          {renderSuggestion("location")}
+
         </div>
 
 
@@ -976,7 +1283,7 @@ function InventoryForm({
 
             type="submit"
 
-            disabled={formIsLoading}
+            disabled={formIsLoading || Boolean(duplicateInventory)}
 
             className="rounded-lg bg-mint-700 px-5 py-2 font-medium text-white hover:bg-mint-800 disabled:cursor-not-allowed disabled:opacity-50"
 

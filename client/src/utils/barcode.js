@@ -4,8 +4,8 @@ import {
     BrowserMultiFormatOneDReader,
 } from "@zxing/browser";
 import { DecodeHintType } from "@zxing/library";
+import { normalizeMedicineImage } from "./medicineImage";
 
-const SUPPORTED_TYPES = ["image/jpeg", "image/png"];
 // The medicine catalog stores numeric retail identifiers. Restrict ZXing to
 // the UPC/EAN formats that produce those identifiers; QR, Micro QR, Data
 // Matrix, and unrelated industrial formats are not accepted by this workflow.
@@ -124,16 +124,10 @@ function createCropDataUrl(image, x, y, width, height) {
  * UPC/EAN barcode is present. Unexpected image and decoder errors are thrown.
  */
 export async function decodeBarcodeFromImage(file) {
-    if (!file || !SUPPORTED_TYPES.includes(file.type)) {
-        throw new Error("Please select a JPG or PNG image.");
-    }
-
-    if (file.size === 0) {
-        throw new Error("The selected image is empty.");
-    }
+    const imageFile = await normalizeMedicineImage(file);
 
     const reader = createReader();
-    const originalUrl = URL.createObjectURL(file);
+    const originalUrl = URL.createObjectURL(imageFile);
 
     try {
         // Attempt 1: Decode the complete original image.
@@ -146,7 +140,7 @@ export async function decodeBarcodeFromImage(file) {
         URL.revokeObjectURL(originalUrl);
     }
 
-    const image = await loadImage(file);
+    const image = await loadImage(imageFile);
     const { naturalWidth: width, naturalHeight: height } = image;
 
     // Attempt 2 onwards: Check the complete image and likely
