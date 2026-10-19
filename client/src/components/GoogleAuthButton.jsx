@@ -2,6 +2,7 @@ import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
+import { setAuthToken } from "../lib/authSession";
 
 function GoogleAuthButton({ mode = "signin" }) {
     const navigate = useNavigate();
@@ -24,7 +25,7 @@ function GoogleAuthButton({ mode = "signin" }) {
                 credential: response.credential
             });
 
-            localStorage.setItem("token", data.token);
+            setAuthToken(data.token);
 
             navigate("/dashboard", {
                 replace: true

@@ -71,6 +71,15 @@ const userSchema = new mongoose.Schema(
             enum: ["PHARMACIST", "STAFF", "ADMIN"],
             default: "PHARMACIST",
             required: true
+        },
+
+        // Incremented when account credentials are reset. Existing JWTs
+        // carry the prior value and are rejected by auth middleware.
+        tokenVersion: {
+            type: Number,
+            default: 0,
+            min: 0,
+            select: false
         }
     },
     {

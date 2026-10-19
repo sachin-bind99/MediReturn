@@ -1,5 +1,5 @@
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useState, useSyncExternalStore } from "react";
 
 import {
     BrowserRouter,
@@ -10,6 +10,11 @@ import {
 } from "react-router-dom";
 
 import api from "./lib/api";
+import {
+    clearAuthToken,
+    getAuthToken,
+    subscribeToAuthToken
+} from "./lib/authSession";
 
 // Route-level splitting keeps OCR and chart dependencies out of the first load.
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -47,13 +52,17 @@ function PageLoading() {
 // Protected Route
 // ========================================
 function ProtectedRoute({ render }) {
-    const token = localStorage.getItem("token");
-
-    const [status, setStatus] = useState(() =>
-        token ? "checking" : "unauthenticated"
+    const token = useSyncExternalStore(
+        subscribeToAuthToken,
+        getAuthToken,
+        () => null
     );
 
-    const [user, setUser] = useState(null);
+    const [verification, setVerification] = useState({
+        token: null,
+        status: "unauthenticated",
+        user: null
+    });
 
     useEffect(() => {
         if (!token) {
@@ -63,17 +72,19 @@ function ProtectedRoute({ render }) {
         const controller = new AbortController();
 
         api.get("/auth/me", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
             signal: controller.signal,
         })
             .then(({ data }) => {
-                setUser(data.user);
-                setStatus("authenticated");
+                if (getAuthToken() === token) {
+                    setVerification({
+                        token,
+                        status: "authenticated",
+                        user: data.user
+                    });
+                }
             })
             .catch((error) => {
-                if (controller.signal.aborted) {
+                if (controller.signal.aborted || getAuthToken() !== token) {
                     return;
                 }
 
@@ -81,16 +92,26 @@ function ProtectedRoute({ render }) {
                     error.response?.status === 401 ||
                     error.response?.status === 404
                 ) {
-                    localStorage.removeItem("token");
-                    setStatus("unauthenticated");
+                    clearAuthToken();
                     return;
                 }
 
-                setStatus("unavailable");
+                setVerification({
+                    token,
+                    status: "unavailable",
+                    user: null
+                });
             });
 
         return () => controller.abort();
     }, [token]);
+
+    const status = verification.token === token
+        ? verification.status
+        : token
+            ? "checking"
+            : "unauthenticated";
+    const user = verification.token === token ? verification.user : null;
 
     // Checking session
     if (status === "checking") {
@@ -150,7 +171,19 @@ function ProtectedRoute({ render }) {
         return <Navigate to="/login" replace />;
     }
 
-    return render(user);
+    return <Fragment key={token}>{render(user)}</Fragment>;
+}
+
+function HomeRoute() {
+    const token = useSyncExternalStore(
+        subscribeToAuthToken,
+        getAuthToken,
+        () => null
+    );
+
+    return token
+        ? <Navigate to="/dashboard" replace />
+        : <Landing />;
 }
 
 // ========================================
@@ -167,7 +200,7 @@ function App() {
 
                 <Route
                     path="/"
-                    element={<Landing />}
+                    element={<HomeRoute />}
                 />
 
                 <Route

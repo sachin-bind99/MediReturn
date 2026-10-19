@@ -7,7 +7,8 @@ import {
     login,
     forgotPassword,
     resetPassword,
-    googleAuth
+    googleAuth,
+    logout
 } from "../controllers/authController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -21,6 +22,8 @@ import {
 } from "../middleware/authRateLimiters.js";
 
 const router = express.Router();
+
+router.post("/logout", authMiddleware, logout);
 
 // Register with email and password
 router.post(

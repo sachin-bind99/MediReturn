@@ -1,9 +1,10 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { createHash, randomBytes } from "node:crypto";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
+import Session from "../models/Session.js";
+import { issueAccessToken } from "../utils/authSession.js";
 
 // Validate basic email structure.
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -150,7 +151,9 @@ export const login = async (req, res) => {
     }
 
     try {
-        const user = await User.findOne({ email }).select("+password");
+        const user = await User.findOne({ email }).select(
+            "+password +tokenVersion"
+        );
 
         // Google-only accounts do not have a password and use Google sign-in.
         if (!user || !user.password) {
@@ -167,11 +170,7 @@ export const login = async (req, res) => {
             });
         }
 
-        const token = jwt.sign(
-            { userId: String(user._id) },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
+        const token = await issueAccessToken(user);
 
         return res.status(200).json({
             message: "Login successful",
@@ -255,7 +254,7 @@ export const googleAuth = async (req, res) => {
 
     try {
         // If this Google identity has been used before, sign in that account.
-        let user = await User.findOne({ googleId });
+        let user = await User.findOne({ googleId }).select("+tokenVersion");
 
         if (!user) {
             // Do not silently link an existing local account based only on email.
@@ -278,11 +277,7 @@ export const googleAuth = async (req, res) => {
             });
         }
 
-        const token = jwt.sign(
-            { userId: String(user._id) },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
+        const token = await issueAccessToken(user);
 
         return res.status(200).json({
             message: "Google authentication successful",
@@ -475,7 +470,9 @@ export const resetPassword = async (req, res) => {
         const user = await User.findOne({
             passwordResetTokenHash: tokenHash,
             passwordResetExpires: { $gt: new Date() },
-        }).select("+passwordResetTokenHash +passwordResetExpires");
+        }).select(
+            "+passwordResetTokenHash +passwordResetExpires +tokenVersion"
+        );
 
         if (!user) {
             return res.status(400).json({
@@ -488,6 +485,7 @@ export const resetPassword = async (req, res) => {
         // A reset link can be used only once.
         user.passwordResetTokenHash = undefined;
         user.passwordResetExpires = undefined;
+        user.tokenVersion = Number(user.tokenVersion || 0) + 1;
 
         await user.save();
 
@@ -498,6 +496,30 @@ export const resetPassword = async (req, res) => {
         console.error("Reset password error:", error);
         return res.status(500).json({
             message: "Unable to reset password right now",
+        });
+    }
+};
+
+// ----------------------------------------
+// LOG OUT
+// POST /api/auth/logout
+// ----------------------------------------
+export const logout = async (req, res) => {
+    try {
+        await Session.updateOne(
+            {
+                _id: req.authSessionId,
+                user: req.userId,
+                revokedAt: null
+            },
+            { $set: { revokedAt: new Date() } }
+        );
+
+        return res.status(200).json({ message: "Logout successful" });
+    } catch (error) {
+        console.error("Logout error:", error.message);
+        return res.status(503).json({
+            message: "Unable to invalidate this session right now"
         });
     }
 };

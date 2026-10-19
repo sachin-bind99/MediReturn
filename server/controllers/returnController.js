@@ -9,6 +9,7 @@ import { getReturnStatus } from "../utils/inventoryStatus.js";
 // ----------------------------------------
 const populatedReturn = (query) =>
     query
+        .select("-createdBy")
         .populate(
             "inventory",
             "batchNumber quantity purchasePrice expiryDate returnWindowDays location"
@@ -41,6 +42,28 @@ const getUserRole = async (userId) => {
 
 const canManageReturns = (role) =>
     ["STAFF", "ADMIN"].includes(role);
+
+// In this application, each account owns its own workspace. Staff/admin
+// accounts can manage all returns in that workspace, but there is no shop
+// membership model that would authorize access to a different account's data.
+const getReturnScope = (userId, role) => {
+    const clauses = [
+        {
+            $or: [
+                { createdBy: userId },
+                // Existing returns predate createdBy. Their requester was
+                // always assigned from the authenticated user on creation.
+                { createdBy: { $exists: false }, requestedBy: userId }
+            ]
+        }
+    ];
+
+    if (!canManageReturns(role)) {
+        clauses.push({ requestedBy: userId });
+    }
+
+    return { $and: clauses };
+};
 
 // ----------------------------------------
 // Common error handler
@@ -222,6 +245,7 @@ export const createReturn = async (req, res) => {
             reason: reason.trim(),
             status: "PENDING",
             requestedBy: req.userId,
+            createdBy: req.userId,
             processedAt: null,
         });
 
@@ -242,7 +266,7 @@ export const createReturn = async (req, res) => {
 // GET ALL RETURNS
 // GET /api/returns
 // PHARMACIST: own requests
-// STAFF / ADMIN: all requests
+// STAFF / ADMIN: all requests in their own account workspace
 // ----------------------------------------
 export const getReturns = async (req, res) => {
     try {
@@ -260,9 +284,7 @@ export const getReturns = async (req, res) => {
             });
         }
 
-        const filter = canManageReturns(role)
-            ? {}
-            : { requestedBy: req.userId };
+        const filter = getReturnScope(req.userId, role);
 
         const returns = await populatedReturn(
             Return.find(filter).sort({
@@ -283,7 +305,7 @@ export const getReturns = async (req, res) => {
 // GET RETURN BY ID
 // GET /api/returns/:id
 // PHARMACIST: own request
-// STAFF / ADMIN: any request
+// STAFF / ADMIN: any request in their own account workspace
 // ----------------------------------------
 export const getReturnById = async (req, res) => {
     try {
@@ -309,14 +331,10 @@ export const getReturnById = async (req, res) => {
             });
         }
 
-        const filter = { _id: id };
-
-        if (!canManageReturns(role)) {
-            filter.requestedBy = req.userId;
-        }
-
         const returnRequest = await populatedReturn(
-            Return.findOne(filter)
+            Return.findOne({
+                $and: [{ _id: id }, getReturnScope(req.userId, role)]
+            })
         );
 
         if (!returnRequest) {
@@ -398,9 +416,12 @@ export const updateReturnStatus = async (req, res) => {
         session = await mongoose.startSession();
 
         await session.withTransaction(async () => {
-            // Staff and admins can manage requests from
-            // any user in this single-organization MVP.
-            const returnRequest = await Return.findById(id)
+            const returnRequest = await Return.findOne({
+                $and: [
+                    { _id: id },
+                    getReturnScope(req.userId, role)
+                ]
+            })
                 .session(session);
 
             if (!returnRequest) {
@@ -408,6 +429,19 @@ export const updateReturnStatus = async (req, res) => {
                     "Return request not found"
                 );
 
+                error.statusCode = 404;
+                throw error;
+            }
+
+            const ownedInventory = await Inventory.findOne({
+                _id: returnRequest.inventory,
+                createdBy: req.userId
+            })
+                .select("_id")
+                .session(session);
+
+            if (!ownedInventory) {
+                const error = new Error("Return request not found");
                 error.statusCode = 404;
                 throw error;
             }
@@ -434,6 +468,7 @@ export const updateReturnStatus = async (req, res) => {
                     await Inventory.updateOne(
                         {
                             _id: returnRequest.inventory,
+                            createdBy: req.userId,
                             quantity: {
                                 $gte: returnRequest.quantity,
                             },
@@ -467,12 +502,20 @@ export const updateReturnStatus = async (req, res) => {
             // If saving fails, inventory deduction rolls back.
             returnRequest.status = status;
             returnRequest.processedAt = new Date();
+            // Backfill legacy records once their requester/owner scope and
+            // inventory ownership have both been verified.
+            returnRequest.createdBy = req.userId;
 
             await returnRequest.save({ session });
         });
 
         const updatedReturn = await populatedReturn(
-            Return.findById(id)
+            Return.findOne({
+                $and: [
+                    { _id: id },
+                    getReturnScope(req.userId, role)
+                ]
+            })
         );
 
         return res.status(200).json({

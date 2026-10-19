@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import GoogleAuthButton from "../components/GoogleAuthButton";
 import api from "../lib/api";
+import { setAuthToken } from "../lib/authSession";
 
 function Login() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ function Login() {
         password,
       });
 
-      localStorage.setItem("token", data.token);
+      setAuthToken(data.token);
 
       navigate("/dashboard", { replace: true });
     } catch (requestError) {

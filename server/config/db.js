@@ -13,14 +13,33 @@ const ensureMedicineIndexes = async () => {
 };
 
 const connectDB = async () => {
-    const mongoUri = process.env.MONGODB_URI;
+    const isTest = process.env.NODE_ENV === "test";
+    const mongoUri = isTest
+        ? process.env.MONGODB_TEST_URI
+        : process.env.MONGODB_URI;
+    const dbName = isTest
+        ? process.env.MONGODB_TEST_DB_NAME
+        : process.env.MONGODB_DB_NAME || "medireturn";
 
     if (!mongoUri) {
-        throw new Error("MONGODB_URI is missing from the server environment");
+        throw new Error(
+            isTest
+                ? "MONGODB_TEST_URI is required for test database connections"
+                : "MONGODB_URI is missing from the server environment"
+        );
+    }
+
+    if (
+        isTest &&
+        (!dbName || !/_test$/i.test(dbName) || dbName.toLowerCase() === "medireturn")
+    ) {
+        throw new Error(
+            "MONGODB_TEST_DB_NAME must be an explicit database name ending in _test"
+        );
     }
 
     const conn = await mongoose.connect(mongoUri, {
-        dbName: "medireturn",
+        dbName,
     });
     await ensureMedicineIndexes();
     console.log(

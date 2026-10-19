@@ -13,6 +13,7 @@ import {
 } from "recharts";
 
 import api from "../lib/api";
+import { clearAuthToken, getAuthToken } from "../lib/authSession";
 
 // ----------------------------------------
 // Main KPI configuration
@@ -475,12 +476,21 @@ function Dashboard({ user }) {
     // --------------------------------
     // Sign out
     // --------------------------------
-    const handleSignOut = () => {
-        localStorage.removeItem("token");
+    const handleSignOut = async () => {
+        const sessionToken = getAuthToken();
 
-        navigate("/login", {
-            replace: true
-        });
+        try {
+            await api.post("/auth/logout");
+        } catch {
+            // Clear the browser session even if the API is unreachable.
+        } finally {
+            if (getAuthToken() === sessionToken) {
+                clearAuthToken();
+                navigate("/login", {
+                    replace: true
+                });
+            }
+        }
     };
 
     // --------------------------------
@@ -554,13 +564,13 @@ function Dashboard({ user }) {
             <header className="sticky top-0 z-20 border-b border-navbar-ink/20 bg-navbar text-navbar-ink shadow-sm backdrop-blur-xl">
                 <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-4 sm:px-7 lg:px-10">
 
-                    <Link
-                        className="flex shrink-0 items-center gap-3 font-semibold tracking-tight text-navbar-ink"
-                        to="/"
-                    >
-                        <span
-                            className="grid size-10 place-items-center rounded-2xl bg-mint-100 text-mint-700"
-                            aria-hidden="true"
+                    <div className="flex shrink-0 items-center gap-3">
+                        <Link
+                            className="grid size-10 place-items-center rounded-2xl bg-mint-100 text-mint-700 transition hover:bg-mint-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-600 focus-visible:ring-offset-2"
+                            to="/inventory"
+                            state={{ openInventoryForm: true }}
+                            aria-label="Add inventory batch"
+                            title="Add inventory batch"
                         >
                             <svg
                                 viewBox="0 0 24 24"
@@ -574,15 +584,21 @@ function Dashboard({ user }) {
                                     strokeLinecap="round"
                                 />
                             </svg>
-                        </span>
+                        </Link>
 
-                        <span className="text-lg">
-                            Medi
-                            <span className="text-navbar-ink">
-                                Return
+                        <Link
+                            className="font-semibold tracking-tight text-navbar-ink"
+                            to="/dashboard"
+                            aria-label="MediReturn dashboard"
+                        >
+                            <span className="text-lg">
+                                Medi
+                                <span className="text-navbar-ink">
+                                    Return
+                                </span>
                             </span>
-                        </span>
-                    </Link>
+                        </Link>
+                    </div>
 
                     <div className="flex items-center gap-3 sm:gap-5">
 

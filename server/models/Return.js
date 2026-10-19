@@ -61,6 +61,14 @@ const returnSchema = new mongoose.Schema(
             required: [true, "Requested by user is required"]
         },
 
+        // Tenant owner derived from the validated inventory record.
+        // Never accept this value from the client.
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: [true, "Return owner is required"]
+        },
+
         processedAt: {
             type: Date,
             default: null
@@ -70,6 +78,8 @@ const returnSchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+returnSchema.index({ createdBy: 1, createdAt: -1 });
 
 const Return = mongoose.model("Return", returnSchema);
 
