@@ -561,7 +561,7 @@ function Dashboard({ user }) {
             {/* =================================
                 Header
             ================================== */}
-            <header className="sticky top-0 z-20 border-b border-navbar-ink/20 bg-navbar text-navbar-ink shadow-sm backdrop-blur-xl">
+            <header className="sticky top-12 z-20 border-b border-navbar-ink/20 bg-navbar text-navbar-ink shadow-sm backdrop-blur-xl lg:top-0">
                 <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-4 sm:px-7 lg:px-10">
 
                     <div className="flex shrink-0 items-center gap-3">
@@ -1563,7 +1563,7 @@ function Dashboard({ user }) {
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto">
-                                        <table className="w-full">
+                                        <table className="w-full min-w-[760px]">
 
                                             <thead className="bg-slate-50">
                                                 <tr>
@@ -1720,7 +1720,7 @@ function Dashboard({ user }) {
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto">
-                                        <table className="w-full">
+                                        <table className="w-full min-w-[760px]">
 
                                             <thead className="bg-slate-50">
                                                 <tr>
@@ -1889,7 +1889,7 @@ function Dashboard({ user }) {
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto">
-                                        <table className="w-full">
+                                        <table className="w-full min-w-[760px]">
 
                                             <thead className="bg-slate-50">
                                                 <tr>

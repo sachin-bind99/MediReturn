@@ -1063,7 +1063,7 @@ function Inventory() {
                 {!loading && !error && (
                     <div className="overflow-hidden rounded-lg border border-line bg-panel shadow-sm">
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full min-w-[1040px]">
                                 <thead className="bg-gray-100">
                                     <tr>
                                         {/* Medicine */}

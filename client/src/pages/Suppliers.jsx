@@ -906,7 +906,7 @@ function Suppliers() {
 
                         <div className="overflow-x-auto">
 
-                            <table className="w-full">
+                            <table className="w-full min-w-[800px]">
 
 
 

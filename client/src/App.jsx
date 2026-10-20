@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 
 import api from "./lib/api";
+import MobileAppNavigation from "./components/MobileAppNavigation.jsx";
 import {
     clearAuthToken,
     getAuthToken,
@@ -171,7 +172,12 @@ function ProtectedRoute({ render }) {
         return <Navigate to="/login" replace />;
     }
 
-    return <Fragment key={token}>{render(user)}</Fragment>;
+    return (
+        <Fragment key={token}>
+            <MobileAppNavigation />
+            {render(user)}
+        </Fragment>
+    );
 }
 
 function HomeRoute() {
