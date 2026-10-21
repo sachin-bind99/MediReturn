@@ -254,7 +254,7 @@ function InventoryDetails() {
                     Navigation
                 ========================== */}
                 <nav
-                    className="mb-6 flex flex-wrap gap-1 rounded-xl border border-navbar-ink/20 bg-navbar p-1.5 shadow-sm"
+                    className="mb-6 hidden flex-wrap gap-1 rounded-xl border border-navbar-ink/20 bg-navbar p-1.5 shadow-sm xl:flex"
                     aria-label="Main navigation"
                 >
                     <Link
@@ -716,7 +716,7 @@ function InventoryDetails() {
                                 Email
                             </p>
 
-                            <p className="mt-1 break-all font-semibold text-gray-900">
+                            <p className="mt-1 break-words font-semibold text-gray-900">
                                 {inventory.supplier
                                     ?.email ||
                                     "N/A"}

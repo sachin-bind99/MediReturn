@@ -9,6 +9,8 @@ import {
 } from "react-router-dom";
 import api from "../lib/api";
 import InventoryForm from "../components/inventory/InventoryForm";
+import ResponsiveTableHint from "../components/ResponsiveTableHint.jsx";
+import InventoryStatusBadges from "../components/inventory/InventoryStatusBadges.jsx";
 
 const RECENT_ACTIVITY_PAGE_SIZE = 10;
 
@@ -426,7 +428,7 @@ function Inventory() {
                                     <p className="text-xs font-medium uppercase tracking-wide text-muted">
                                         {isCreated ? "Value when created" : "Last saved value"}
                                     </p>
-                                    <p className="mt-1 break-words text-sm text-gray-700">
+                                    <p className="mt-1 break-normal text-sm text-gray-700">
                                         {formattedSnapshotValue}
                                     </p>
                                 </div>
@@ -436,7 +438,7 @@ function Inventory() {
                                         <p className="text-xs font-medium uppercase tracking-wide text-muted">
                                             Previous value
                                         </p>
-                                        <p className="mt-1 break-words text-sm text-gray-700">
+                                        <p className="mt-1 break-normal text-sm text-gray-700">
                                             {formatActivityValue(change.field, change.previousValue)}
                                         </p>
                                     </div>
@@ -444,7 +446,7 @@ function Inventory() {
                                         <p className="text-xs font-medium uppercase tracking-wide text-muted">
                                             New value
                                         </p>
-                                        <p className="mt-1 break-words text-sm text-gray-700">
+                                        <p className="mt-1 break-normal text-sm text-gray-700">
                                             {formatActivityValue(change.field, change.newValue)}
                                         </p>
                                     </div>
@@ -791,7 +793,7 @@ function Inventory() {
                     Navigation
                 ========================== */}
                 <nav
-                    className="mb-6 flex flex-wrap gap-1 rounded-xl border border-navbar-ink/20 bg-navbar p-1.5 shadow-sm"
+                    className="mb-6 hidden flex-wrap gap-1 rounded-xl border border-navbar-ink/20 bg-navbar p-1.5 shadow-sm xl:flex"
                     aria-label="Main navigation"
                 >
                     <Link
@@ -845,14 +847,14 @@ function Inventory() {
                             type="button"
                             onClick={handleExportCsv}
                             disabled={exporting}
-                            className="rounded-lg border border-gray-300 bg-panel px-4 py-2 font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="min-h-11 flex-1 rounded-lg border border-gray-300 bg-panel px-4 py-2 font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 min-[430px]:flex-none"
                         >
                             {exporting ? "Exporting..." : "Export CSV"}
                         </button>
                         <button
                             type="button"
                             onClick={handleAddInventory}
-                            className="rounded-lg bg-mint-700 px-4 py-2 font-medium text-white hover:bg-mint-800"
+                            className="min-h-11 flex-1 rounded-lg bg-mint-700 px-4 py-2 font-medium text-white hover:bg-mint-800 min-[430px]:flex-none"
                         >
                             + Add Batch
                         </button>
@@ -872,7 +874,7 @@ function Inventory() {
                 {/* =========================
                     Summary Cards
                 ========================== */}
-                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {/* Total Value */}
                     <div className="rounded-xl border border-line bg-panel p-5 shadow-sm">
                         <p className="text-sm text-muted">
@@ -959,7 +961,7 @@ function Inventory() {
                                 handleStatusFilterChange(event.target.value);
                             }}
                             aria-label="Filter by inventory status"
-                            className="rounded-xl border border-gray-300 bg-panel px-3 py-3 text-sm"
+                            className="w-full min-w-0 rounded-xl border border-gray-300 bg-panel px-3 py-3 text-sm"
                         >
                             <option value="ALL">All stock</option>
                             <option value="LOW_STOCK">Low stock</option>
@@ -977,7 +979,7 @@ function Inventory() {
                                 setPage(1);
                             }}
                             aria-label="Sort inventory by"
-                            className="rounded-xl border border-gray-300 bg-panel px-3 py-3 text-sm"
+                            className="w-full min-w-0 rounded-xl border border-gray-300 bg-panel px-3 py-3 text-sm"
                         >
                             <option value="expiryDate">Expiry date</option>
                             <option value="quantity">Quantity</option>
@@ -993,7 +995,7 @@ function Inventory() {
                                 setPage(1);
                             }}
                             aria-label="Sort direction"
-                            className="rounded-xl border border-gray-300 bg-panel px-3 py-3 text-sm"
+                            className="w-full min-w-0 rounded-xl border border-gray-300 bg-panel px-3 py-3 text-sm"
                         >
                             <option value="asc">Ascending</option>
                             <option value="desc">Descending</option>
@@ -1006,7 +1008,7 @@ function Inventory() {
                                 setPage(1);
                             }}
                             aria-label="Items per page"
-                            className="rounded-xl border border-gray-300 bg-panel px-3 py-3 text-sm"
+                            className="w-full min-w-0 rounded-xl border border-gray-300 bg-panel px-3 py-3 text-sm"
                         >
                             <option value={10}>10 per page</option>
                             <option value={25}>25 per page</option>
@@ -1034,14 +1036,14 @@ function Inventory() {
                     </p>
                 </section>
                 {!loading && error && (
-                    <div className="mb-6 flex items-center justify-between rounded-lg bg-red-50 p-4 text-red-600">
-                        <span>
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-red-50 p-4 text-red-600">
+                        <span className="min-w-0 flex-1">
                             {error}
                         </span>
                         <button
                             type="button"
                             onClick={fetchInventories}
-                            className="font-bold text-red-500 hover:text-red-700"
+                            className="min-h-11 min-w-11 shrink-0 font-bold text-red-500 hover:text-red-700"
                         >
                             ×
                         </button>
@@ -1062,52 +1064,173 @@ function Inventory() {
                 ========================== */}
                 {!loading && !error && (
                     <div className="overflow-hidden rounded-lg border border-line bg-panel shadow-sm">
-                        <div className="overflow-x-auto">
-                            <table className="w-full min-w-[1040px]">
+                        <div className="divide-y divide-line md:hidden">
+                            {filteredInventories.length > 0 ? (
+                                filteredInventories.map((inventory) => (
+                                    <article
+                                        key={inventory._id}
+                                        className="space-y-4 p-4"
+                                        aria-label={`${inventory.medicine?.name || "Unknown Medicine"}, batch ${inventory.batchNumber || "unknown"}`}
+                                    >
+                                        <div className="min-w-0">
+                                            <h2 className="break-normal text-base font-semibold text-gray-900">
+                                                {inventory.medicine?.name || "Unknown Medicine"}
+                                            </h2>
+                                            {inventory.medicine?.genericName && (
+                                                <p className="mt-0.5 break-normal text-sm text-muted">
+                                                    {inventory.medicine.genericName}
+                                                </p>
+                                            )}
+                                            <p className="mt-1 whitespace-nowrap text-sm font-medium text-gray-700">
+                                                Batch {inventory.batchNumber || "N/A"}
+                                            </p>
+                                        </div>
+
+                                        <dl className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-4">
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Supplier</dt>
+                                                <dd className="mt-1 break-normal text-sm text-gray-800">
+                                                    {inventory.supplier?.companyName || "Unknown Supplier"}
+                                                </dd>
+                                                {inventory.supplier?.name && (
+                                                    <dd className="mt-0.5 break-normal text-xs text-muted">
+                                                        {inventory.supplier.name}
+                                                    </dd>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Quantity</dt>
+                                                <dd className="mt-1 whitespace-nowrap text-sm font-semibold tabular-nums text-gray-900">{inventory.quantity}</dd>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Expiry date</dt>
+                                                <dd className="mt-1 whitespace-nowrap text-sm text-gray-800">{formatDate(inventory.expiryDate)}</dd>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Return deadline</dt>
+                                                <dd className="mt-1 whitespace-nowrap text-sm text-gray-800">{formatDate(inventory.returnDeadline)}</dd>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Purchase price</dt>
+                                                <dd className="mt-1 whitespace-nowrap text-sm tabular-nums text-gray-800">
+                                                    {"\u20B9"}{formatCurrency(inventory.purchasePrice)}
+                                                </dd>
+                                            </div>
+                                            <div className="col-span-2 min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Inventory value</dt>
+                                                <dd className="mt-1 whitespace-nowrap text-sm font-medium tabular-nums text-gray-900">
+                                                    {"\u20B9"}{formatCurrency(inventory.inventoryValue)}
+                                                </dd>
+                                                {Number(inventory.potentialLoss) > 0 && (
+                                                    <dd className="mt-1 whitespace-nowrap text-xs font-medium tabular-nums text-red-600">
+                                                        Loss: {"\u20B9"}{formatCurrency(inventory.potentialLoss)}
+                                                    </dd>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Location</dt>
+                                                <dd className="mt-1 break-normal text-sm text-gray-800">
+                                                    {inventory.location || "—"}
+                                                </dd>
+                                            </div>
+                                        </dl>
+
+                                        <div>
+                                            <p className="mb-2 text-xs font-medium text-muted">Status</p>
+                                            <InventoryStatusBadges inventory={inventory} />
+                                        </div>
+
+                                        <div className="flex flex-col gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleViewInventory(inventory)}
+                                                className="min-h-11 w-full whitespace-nowrap rounded-lg border border-mint-500 px-3 text-sm font-medium text-mint-700 hover:bg-mint-50"
+                                            >
+                                                View
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleViewActivity(inventory)}
+                                                aria-label={`View activity history for batch ${inventory.batchNumber || ""}`}
+                                                className="min-h-11 w-full whitespace-nowrap rounded-lg border border-line px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                            >
+                                                History
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEditInventory(inventory)}
+                                                className="min-h-11 w-full whitespace-nowrap rounded-lg border border-mint-500 px-3 text-sm font-medium text-mint-700 hover:bg-mint-50"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteClick(inventory)}
+                                                className="min-h-11 w-full whitespace-nowrap rounded-lg border border-red-500 px-3 text-sm font-medium text-red-600 hover:bg-red-50"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </article>
+                                ))
+                            ) : (
+                                <p className="px-4 py-10 text-center text-sm text-muted">
+                                    {medicineId
+                                        ? `No inventory matches the selected medicine${search.trim() ? " and your search" : ""}${statusFilter !== "ALL" ? ` with status ${statusFilter.replace(/_/g, " ").toLowerCase()}` : ""}.`
+                                        : search.trim() || statusFilter !== "ALL"
+                                          ? "No inventory matches your search and status filters."
+                                          : "No inventory found."}
+                                </p>
+                            )}
+                        </div>
+                        <div className="hidden md:block">
+                        <ResponsiveTableHint hideAt="min-[1328px]:hidden" />
+                        <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" tabIndex={0} aria-label="Inventory batches, horizontally scrollable table">
+                            <table className="w-full min-w-[1320px] table-auto">
                                 <thead className="bg-gray-100">
                                     <tr>
                                         {/* Medicine */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[150px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Medicine
                                         </th>
                                         {/* Batch */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[110px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Batch
                                         </th>
                                         {/* Supplier */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[150px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Supplier
                                         </th>
                                         {/* Quantity */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[75px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Qty
                                         </th>
                                         {/* Expiry */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[110px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Expiry
                                         </th>
                                         {/* Return */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[110px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Return
                                         </th>
                                         {/* Status */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[150px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Status
                                         </th>
                                         {/* Price */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[105px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Price
                                         </th>
                                         {/* Value */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[145px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Value
                                         </th>
                                         {/* Location */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[110px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Location
                                         </th>
                                         {/* Actions */}
-                                        <th className="px-5 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[130px] whitespace-nowrap px-5 py-4 text-left text-sm font-semibold text-gray-700">
                                             Actions
                                         </th>
                                     </tr>
@@ -1124,7 +1247,7 @@ function Inventory() {
                                                         className="border-t border-line hover:bg-gray-50"
                                                     >
                                                         {/* Medicine */}
-                                                        <td className="px-5 py-4">
+                                                        <td className="min-w-[150px] px-5 py-4">
                                                             <div className="font-medium text-gray-900">
                                                                 {inventory.medicine
                                                                     ?.name ||
@@ -1143,13 +1266,13 @@ function Inventory() {
                                                             )}
                                                         </td>
                                                         {/* Batch */}
-                                                        <td className="px-5 py-4 font-medium text-gray-700">
+                                                        <td className="whitespace-nowrap px-5 py-4 font-medium tabular-nums text-gray-700">
                                                             {
                                                                 inventory.batchNumber
                                                             }
                                                         </td>
                                                         {/* Supplier */}
-                                                        <td className="px-5 py-4">
+                                                        <td className="min-w-[150px] px-5 py-4">
                                                             <div className="font-medium text-gray-900">
                                                                 {inventory
                                                                     .supplier
@@ -1169,14 +1292,14 @@ function Inventory() {
                                                             )}
                                                         </td>
                                                         {/* Quantity */}
-                                                        <td className="px-5 py-4 text-gray-700">
+                                                        <td className="whitespace-nowrap px-5 py-4 tabular-nums text-gray-700">
                                                             {
                                                                 inventory.quantity
                                                             }
                                                         </td>
                                                         {/* Expiry */}
                                                         <td className="px-5 py-4">
-                                                            <div className="text-gray-700">
+                                                            <div className="whitespace-nowrap text-gray-700">
                                                                 {formatDate(
                                                                     inventory.expiryDate
                                                                 )}
@@ -1208,7 +1331,7 @@ function Inventory() {
                                                         </td>
                                                         {/* Return */}
                                                         <td className="px-5 py-4">
-                                                            <div className="text-gray-700">
+                                                            <div className="whitespace-nowrap text-gray-700">
                                                                 {formatDate(
                                                                     inventory.returnDeadline
                                                                 )}
@@ -1239,49 +1362,16 @@ function Inventory() {
                                                             )}
                                                         </td>
                                                         {/* Status */}
-                                                        <td className="px-5 py-4">
-                                                            <div className="flex min-w-[145px] flex-wrap gap-1.5">
-                                                                {Number(inventory.quantity) <= 10 && (
-                                                                    <span className="rounded-full bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-700">
-                                                                        Low stock
-                                                                    </span>
-                                                                )}
-                                                                {inventory.expiryStatus === "EXPIRED" && (
-                                                                    <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">
-                                                                        Expired
-                                                                    </span>
-                                                                )}
-                                                                {inventory.expiryStatus === "EXPIRING_SOON" && (
-                                                                    <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-                                                                        Expiring soon
-                                                                    </span>
-                                                                )}
-                                                                {inventory.returnStatus === "RETURN_OVERDUE" && (
-                                                                    <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">
-                                                                        Return overdue
-                                                                    </span>
-                                                                )}
-                                                                {inventory.returnStatus === "RETURN_DUE" && (
-                                                                    <span className="rounded-full bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-700">
-                                                                        Return due
-                                                                    </span>
-                                                                )}
-                                                                {inventory.expiryStatus === "NORMAL" &&
-                                                                    inventory.returnStatus === "NORMAL" &&
-                                                                    Number(inventory.quantity) > 10 && (
-                                                                        <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
-                                                                            Normal
-                                                                        </span>
-                                                                    )}
-                                                            </div>
+                                                        <td className="min-w-[150px] px-5 py-4">
+                                                            <InventoryStatusBadges inventory={inventory} />
                                                         </td>
                                                         {/* Price */}
-                                                        <td className="px-5 py-4 text-gray-700">
+                                                        <td className="min-w-[105px] whitespace-nowrap px-5 py-4 tabular-nums text-gray-700">
                                                             ₹{formatCurrency(inventory.purchasePrice)}
                                                         </td>
                                                         {/* Value */}
-                                                        <td className="px-5 py-4">
-                                                            <div className="font-medium text-gray-900">
+                                                        <td className="min-w-[145px] px-5 py-4">
+                                                            <div className="whitespace-nowrap font-medium tabular-nums text-gray-900">
                                                                 ₹
                                                                 {formatCurrency(
                                                                     inventory.inventoryValue
@@ -1291,7 +1381,7 @@ function Inventory() {
                                                                 inventory.potentialLoss
                                                             ) >
                                                                 0 && (
-                                                                <div className="mt-1 text-xs font-medium text-red-600">
+                                                                <div className="mt-1 whitespace-nowrap text-xs font-medium tabular-nums text-red-600">
                                                                     Loss: ₹
                                                                     {formatCurrency(
                                                                         inventory.potentialLoss
@@ -1300,12 +1390,12 @@ function Inventory() {
                                                             )}
                                                         </td>
                                                         {/* Location */}
-                                                        <td className="px-5 py-4 text-sm text-gray-700">
+                                                        <td className="min-w-[110px] px-5 py-4 text-sm text-gray-700">
                                                             {inventory.location || "—"}
                                                         </td>
                                                         {/* Actions */}
-                                                        <td className="px-5 py-4">
-                                                            <div className="flex flex-wrap gap-2">
+                                                        <td className="min-w-[130px] px-5 py-4">
+                                                            <div className="flex flex-col gap-2">
                                                                 {/* View */}
                                                                 <button
                                                                     type="button"
@@ -1314,14 +1404,14 @@ function Inventory() {
                                                                             inventory
                                                                         )
                                                                     }
-                                                                    className="rounded-lg border border-mint-500 px-3 py-1 text-sm font-medium text-mint-700 hover:bg-mint-50"
+                                                                    className="w-full whitespace-nowrap rounded-lg border border-mint-500 px-3 py-1 text-sm font-medium text-mint-700 hover:bg-mint-50"
                                                                 >
                                                                     View
                                                                 </button>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleViewActivity(inventory)}
-                                                                    className="rounded-lg border border-line px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                                                    className="w-full whitespace-nowrap rounded-lg border border-line px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
                                                                     aria-label={`View activity history for batch ${inventory.batchNumber || ""}`}
                                                                 >
                                                                     History
@@ -1334,7 +1424,7 @@ function Inventory() {
                                                                             inventory
                                                                         )
                                                                     }
-                                                                    className="rounded-lg border border-mint-500 px-3 py-1 text-sm font-medium text-mint-700 hover:bg-mint-50"
+                                                                    className="w-full whitespace-nowrap rounded-lg border border-mint-500 px-3 py-1 text-sm font-medium text-mint-700 hover:bg-mint-50"
                                                                 >
                                                                     Edit
                                                                 </button>
@@ -1346,7 +1436,7 @@ function Inventory() {
                                                                             inventory
                                                                         )
                                                                     }
-                                                                    className="rounded-lg border border-red-500 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-50"
+                                                                    className="w-full whitespace-nowrap rounded-lg border border-red-500 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-50"
                                                                 >
                                                                     Delete
                                                                 </button>
@@ -1372,6 +1462,7 @@ function Inventory() {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
                         </div>
                     </div>
                 )}
@@ -1663,8 +1754,8 @@ function Inventory() {
                     Delete Confirmation Modal
                 ========================== */}
                 {inventoryToDelete && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" role="presentation">
-                        <div className="w-full max-w-md rounded-2xl border border-line bg-panel p-5 shadow-2xl sm:p-6" role="dialog" aria-modal="true" aria-labelledby="inventory-delete-title">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-4" role="presentation">
+                        <div className="w-full max-w-md rounded-2xl border border-line bg-panel p-4 shadow-2xl sm:p-6" role="dialog" aria-modal="true" aria-labelledby="inventory-delete-title">
                             <h2 id="inventory-delete-title" className="text-xl font-semibold text-gray-900">
                                 Delete Inventory Batch
                             </h2>
@@ -1672,13 +1763,13 @@ function Inventory() {
                                 Are you sure you want to delete this inventory batch?
                             </p>
                             <div className="mt-4 rounded-lg bg-gray-50 p-4">
-                                <p className="font-medium text-gray-900">
+                                <p className="break-normal font-medium text-gray-900">
                                     {inventoryToDelete
                                         .medicine
                                         ?.name ||
                                         "Unknown Medicine"}
                                 </p>
-                                <p className="mt-1 text-sm text-muted">
+                                <p className="mt-1 break-normal text-sm text-muted">
                                     Supplier:{" "}
                                     {inventoryToDelete
                                         .supplier
@@ -1704,14 +1795,14 @@ function Inventory() {
                                     )}
                                 </p>
                             </div>
-                            <div className="mt-6 flex justify-end gap-3">
+                            <div className="mt-6 flex flex-col gap-3 min-[420px]:flex-row min-[420px]:justify-end">
                                 <button
                                     type="button"
                                     onClick={
                                         handleCancelDelete
                                     }
                                     disabled={deleting}
-                                    className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                    className="min-h-11 w-full rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 min-[420px]:w-auto"
                                 >
                                     Cancel
                                 </button>
@@ -1721,7 +1812,7 @@ function Inventory() {
                                         handleDeleteInventory
                                     }
                                     disabled={deleting}
-                                    className="rounded-lg bg-danger-button px-4 py-2 font-medium text-white hover:bg-danger-button-hover disabled:opacity-50"
+                                    className="min-h-11 w-full rounded-lg bg-danger-button px-4 py-2 font-medium text-white hover:bg-danger-button-hover disabled:opacity-50 min-[420px]:w-auto"
                                 >
                                     {deleting
                                         ? "Deleting..."

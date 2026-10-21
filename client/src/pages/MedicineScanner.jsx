@@ -1391,7 +1391,7 @@ function MedicineScanner() {
                                                 className="h-32 w-full rounded-lg object-contain"
                                             />
                                             <figcaption className="mt-2 flex items-center justify-between gap-2">
-                                                <span className="min-w-0 break-all text-xs text-slate-600">
+                                                <span className="min-w-0 break-words text-xs text-slate-600">
                                                     {photo.file.name}
                                                 </span>
                                                 <button
@@ -1453,7 +1453,7 @@ function MedicineScanner() {
                                                         </div>
                                                     )}
                                                     <p className="mt-2 font-medium">Recognized text</p>
-                                                    <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words">
+                                                    <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-normal">
                                                         {photoScanResults[photo.id].recognizedText || "No readable text was returned."}
                                                     </pre>
                                                     <p className="mt-2">
@@ -1597,7 +1597,7 @@ function MedicineScanner() {
                                                 ) : (
                                                     <>
                                                         {result.status === "read" && result.value && target !== "expiryText" && (
-                                                            <p className="mt-3 break-words text-slate-900">
+                                                            <p className="mt-3 break-normal text-slate-900">
                                                                 Candidate: {result.value}
                                                             </p>
                                                         )}
@@ -1625,7 +1625,7 @@ function MedicineScanner() {
                                                             </label>
                                                         )}
                                                         {target === "expiryText" && selectedValue && (
-                                                            <p className="mt-2 break-words text-slate-700">
+                                                            <p className="mt-2 break-normal text-slate-700">
                                                                 Expiry date as printed: {selectedValue}
                                                                 {normalizedDate && (
                                                                     <span className="block text-xs text-slate-600">

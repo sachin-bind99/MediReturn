@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 
 import MedicineForm from "../components/medicine/MedicineForm";
+import ResponsiveTableHint from "../components/ResponsiveTableHint.jsx";
 
 const inputClass = "h-12 w-full rounded-xl border border-line bg-panel px-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-mint-500 focus:ring-4 focus:ring-mint-100";
 
@@ -32,6 +33,43 @@ const formatInventoryExpiry = (value) => {
         year: "numeric",
         timeZone: "UTC",
     });
+};
+
+const getMedicineCategories = (value) => {
+    const categories = Array.isArray(value)
+        ? value
+        : typeof value === "string"
+          ? value.split(",")
+          : [];
+
+    return categories
+        .map((item) => String(item ?? "").trim())
+        .filter(Boolean);
+};
+
+const renderCategoryWords = (category, categoryIndex) =>
+    category.split(/(\s+)/).map((part, partIndex) =>
+        part && /\s+/.test(part) ? part : (
+            <span className="whitespace-nowrap" key={`${categoryIndex}-${partIndex}`}>
+                {part}
+            </span>
+        )
+    );
+
+const renderMedicineCategories = (value) => {
+    const categories = getMedicineCategories(value);
+
+    if (categories.length === 0) return <span className="text-muted">—</span>;
+
+    return (
+        <div className="flex flex-col items-start gap-1">
+            {categories.map((item, categoryIndex) => (
+                <span className="max-w-full rounded-full bg-mint-50 px-2.5 py-1 whitespace-normal break-normal" key={`${item}-${categoryIndex}`}>
+                    {renderCategoryWords(item, categoryIndex)}
+                </span>
+            ))}
+        </div>
+    );
 };
 
 function Medicines() {
@@ -270,7 +308,7 @@ function Medicines() {
 
         <div className="min-h-screen bg-canvas text-slate-800">
 
-            <header className="border-b border-navbar-ink/20 bg-navbar text-navbar-ink shadow-sm backdrop-blur-xl">
+            <header className="hidden border-b border-navbar-ink/20 bg-navbar text-navbar-ink shadow-sm backdrop-blur-xl xl:block">
 
                 <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-7 lg:px-10">
 
@@ -286,7 +324,7 @@ function Medicines() {
 
                     </Link>
 
-                    <nav className="ml-2 flex min-w-0 items-center gap-1 overflow-x-auto sm:gap-4" aria-label="Main navigation">
+                    <nav className="ml-2 hidden min-w-0 items-center gap-1 xl:flex xl:gap-4" aria-label="Main navigation">
 
                         <Link className="rounded-lg px-2.5 py-2 text-sm font-medium text-navbar-ink transition hover:bg-panel/60 hover:text-navbar-ink sm:px-3" to="/dashboard">Overview</Link>
 
@@ -445,13 +483,14 @@ function Medicines() {
 
                         </div>
 
-                        <div className="overflow-x-auto">
+                        <ResponsiveTableHint />
+                        <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" tabIndex={0} aria-label="Medicine catalog, horizontally scrollable table">
 
-                            <table className="w-full min-w-[1120px] text-left">
+                            <table className="w-full min-w-[1240px] table-auto text-left">
 
                                 <thead className="bg-slate-50/80 text-xs font-bold uppercase tracking-[0.12em] text-muted">
 
-                                    <tr><th className="px-6 py-3.5">Medicine</th><th className="px-6 py-3.5">Manufacturer</th><th className="px-6 py-3.5">Category</th><th className="px-6 py-3.5">Barcode</th><th className="px-6 py-3.5">Latest price</th><th className="px-6 py-3.5">Latest batch</th><th className="px-6 py-3.5">Next expiry</th><th className="px-6 py-3.5">Batches</th><th className="px-6 py-3.5 text-right">Actions</th></tr>
+                                    <tr><th className="min-w-[170px] whitespace-nowrap px-6 py-3.5">Medicine</th><th className="min-w-[145px] whitespace-nowrap px-6 py-3.5">Manufacturer</th><th className="w-[180px] min-w-[180px] max-w-[180px] whitespace-nowrap px-6 py-3.5">Category</th><th className="min-w-[130px] whitespace-nowrap px-6 py-3.5">Barcode</th><th className="min-w-[110px] whitespace-nowrap px-6 py-3.5">Latest price</th><th className="min-w-[120px] whitespace-nowrap px-6 py-3.5">Latest batch</th><th className="min-w-[145px] whitespace-nowrap px-6 py-3.5">Next expiry</th><th className="min-w-[75px] whitespace-nowrap px-6 py-3.5">Batches</th><th className="min-w-[120px] whitespace-nowrap px-6 py-3.5 text-right">Actions</th></tr>
 
                                 </thead>
 
@@ -461,13 +500,13 @@ function Medicines() {
 
                                         <tr className="transition hover:bg-mint-50/35" key={medicine._id}>
 
-                                            <td className="px-6 py-4">
+                                            <td className="min-w-[170px] px-6 py-4">
 
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex min-w-0 items-center gap-3">
 
                                                     <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${["bg-mint-50 text-mint-700", "bg-amber-50 text-amber-700", "bg-sage-light/60 text-mint-800", "bg-mint-100 text-mint-800"][index % 4]}`} aria-hidden="true"><svg viewBox="0 0 20 20" className="size-5" fill="none"><path d="M6.8 4.2a3.5 3.5 0 0 1 5 0l4 4a3.5 3.5 0 0 1-5 5l-4-4a3.5 3.5 0 0 1 0-5Z" stroke="currentColor" strokeWidth="1.5"/><path d="m7.5 11.4 6.9-6.9" stroke="currentColor" strokeWidth="1.5"/></svg></span>
 
-                                                    <div>
+                                                    <div className="min-w-0 break-normal">
 
                                                         <Link
 
@@ -475,7 +514,7 @@ function Medicines() {
 
                                                             aria-label={`View details for ${medicine.name}`}
 
-                                                            className="rounded-sm font-semibold text-slate-800 transition hover:text-mint-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-500"
+                                                            className="break-normal rounded-sm font-semibold text-slate-800 transition hover:text-mint-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-500"
 
                                                         >
 
@@ -499,17 +538,19 @@ function Medicines() {
 
                                             </td>
 
-                                            <td className="px-6 py-4 text-sm text-slate-600">{medicine.manufacturer}</td>
+                                            <td className="min-w-[145px] break-normal px-6 py-4 text-sm text-slate-600">{medicine.manufacturer}</td>
 
-                                            <td className="px-6 py-4"><span className="inline-flex rounded-full bg-mint-50 px-2.5 py-1 text-xs font-semibold text-mint-800">{medicine.category}</span></td>
+                                            <td className="w-[180px] min-w-[180px] max-w-[180px] px-6 py-4 text-xs font-semibold text-mint-800">
+                                                {renderMedicineCategories(medicine.category)}
+                                            </td>
 
-                                            <td className="px-6 py-4 font-mono text-xs text-muted">{medicine.barcode || "—"}</td>
+                                            <td className="min-w-[130px] whitespace-nowrap px-6 py-4 font-mono text-xs text-muted">{medicine.barcode || "—"}</td>
 
-                                            <td className="px-6 py-4 text-sm font-medium text-slate-700">{formatInventoryPrice(medicine.inventorySummary?.latestPurchasePrice)}</td>
+                                            <td className="min-w-[110px] whitespace-nowrap px-6 py-4 text-sm font-medium tabular-nums text-slate-700">{formatInventoryPrice(medicine.inventorySummary?.latestPurchasePrice)}</td>
 
-                                            <td className="px-6 py-4 font-mono text-xs text-slate-600">{medicine.inventorySummary?.latestBatchNumber || "—"}</td>
+                                            <td className="min-w-[120px] whitespace-nowrap px-6 py-4 font-mono text-xs text-slate-600">{medicine.inventorySummary?.latestBatchNumber || "—"}</td>
 
-                                            <td className="px-6 py-4 text-sm text-slate-600">
+                                            <td className="min-w-[145px] whitespace-nowrap px-6 py-4 text-sm text-slate-600">
                                                 {medicine.inventorySummary?.inventoryBatchCount > 0
                                                     ? medicine.inventorySummary.nextExpiryDate
                                                         ? formatInventoryExpiry(medicine.inventorySummary.nextExpiryDate)
@@ -517,15 +558,15 @@ function Medicines() {
                                                     : "—"}
                                             </td>
 
-                                            <td className="px-6 py-4 text-sm text-slate-600">
+                                            <td className="min-w-[75px] whitespace-nowrap px-6 py-4 text-sm tabular-nums text-slate-600">
                                                 {medicine.inventorySummary?.inventoryBatchCount ?? 0}
                                             </td>
 
-                                            <td className="px-6 py-4"><div className="flex justify-end gap-2">
+                                            <td className="min-w-[120px] px-6 py-4"><div className="flex flex-col items-stretch gap-2">
 
-                                                <button type="button" className="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-mint-300 hover:bg-mint-50 hover:text-mint-800" onClick={() => handleEditMedicine(medicine)}>Edit</button>
+                                                <button type="button" className="w-full whitespace-nowrap rounded-lg border border-line px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-mint-300 hover:bg-mint-50 hover:text-mint-800" onClick={() => handleEditMedicine(medicine)}>Edit</button>
 
-                                                <button type="button" className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50" onClick={() => setMedicineToDelete(medicine)}>Delete</button>
+                                                <button type="button" className="w-full whitespace-nowrap rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50" onClick={() => setMedicineToDelete(medicine)}>Delete</button>
 
                                             </div></td>
 

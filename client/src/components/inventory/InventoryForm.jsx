@@ -774,7 +774,7 @@ function InventoryForm({
 
   return (
 
-    <div className="rounded-lg border border-line bg-panel p-6 shadow-sm">
+    <div className="rounded-lg border border-line bg-panel p-4 shadow-sm sm:p-6">
 
       {/* Heading */}
 
@@ -1277,7 +1277,7 @@ function InventoryForm({
 
         {/* Buttons */}
 
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col gap-3 pt-2 min-[400px]:flex-row">
 
           <button
 
@@ -1285,7 +1285,7 @@ function InventoryForm({
 
             disabled={formIsLoading || Boolean(duplicateInventory)}
 
-            className="rounded-lg bg-mint-700 px-5 py-2 font-medium text-white hover:bg-mint-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 w-full rounded-lg bg-mint-700 px-5 py-2 font-medium text-white hover:bg-mint-800 disabled:cursor-not-allowed disabled:opacity-50 min-[400px]:w-auto"
 
           >
 
@@ -1315,7 +1315,7 @@ function InventoryForm({
 
             disabled={loading}
 
-            className="rounded-lg border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="min-h-11 w-full rounded-lg border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 min-[400px]:w-auto"
 
           >
 

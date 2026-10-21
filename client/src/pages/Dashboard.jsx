@@ -9,10 +9,12 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
+    LabelList,
     ResponsiveContainer
 } from "recharts";
 
 import api from "../lib/api";
+import ResponsiveTableHint from "../components/ResponsiveTableHint.jsx";
 import { clearAuthToken, getAuthToken } from "../lib/authSession";
 
 // ----------------------------------------
@@ -227,6 +229,38 @@ const getIssueConfig = (issue) => {
     }
 };
 
+function StatusDistributionTick({ x, y, payload, variant }) {
+    const label = String(payload?.value || "");
+    const lines = variant === "mobile"
+        ? {
+            "Expiring Soon": ["Expiring", "Soon"],
+            "Return Due": ["Return", "Due"],
+        }[label] || [label]
+        : [label];
+    const fontSize = variant === "mobile" ? 10 : variant === "tablet" ? 12 : 13;
+
+    return (
+        <g transform={`translate(${x},${y})`}>
+            <text
+                textAnchor="middle"
+                fill="var(--color-muted)"
+                fontSize={fontSize}
+                fontWeight={500}
+            >
+                {lines.map((line, index) => (
+                    <tspan
+                        key={`${line}-${index}`}
+                        x="0"
+                        dy={index === 0 ? "0.71em" : "1.1em"}
+                    >
+                        {line}
+                    </tspan>
+                ))}
+            </text>
+        </g>
+    );
+}
+
 function Dashboard({ user }) {
     const navigate = useNavigate();
 
@@ -277,6 +311,34 @@ function Dashboard({ user }) {
     // Notification unread count
     // --------------------------------
     const [unreadAlertCount, setUnreadAlertCount] = useState(0);
+    const [chartViewport, setChartViewport] = useState(() => {
+        if (typeof window === "undefined") return "desktop";
+        if (window.innerWidth < 640) return "mobile";
+        if (window.innerWidth < 1280) return "tablet";
+        return "desktop";
+    });
+
+    useEffect(() => {
+        const mobileViewport = window.matchMedia("(max-width: 639px)");
+        const tabletViewport = window.matchMedia("(min-width: 640px) and (max-width: 1279px)");
+        const updateChartViewport = () => {
+            setChartViewport(
+                mobileViewport.matches
+                    ? "mobile"
+                    : tabletViewport.matches
+                      ? "tablet"
+                      : "desktop"
+            );
+        };
+
+        mobileViewport.addEventListener("change", updateChartViewport);
+        tabletViewport.addEventListener("change", updateChartViewport);
+
+        return () => {
+            mobileViewport.removeEventListener("change", updateChartViewport);
+            tabletViewport.removeEventListener("change", updateChartViewport);
+        };
+    }, []);
 
     const userName =
         user?.name ||
@@ -561,7 +623,7 @@ function Dashboard({ user }) {
             {/* =================================
                 Header
             ================================== */}
-            <header className="sticky top-12 z-20 border-b border-navbar-ink/20 bg-navbar text-navbar-ink shadow-sm backdrop-blur-xl lg:top-0">
+            <header className="sticky top-12 z-20 border-b border-navbar-ink/20 bg-navbar text-navbar-ink shadow-sm backdrop-blur-xl xl:top-0">
                 <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-4 sm:px-7 lg:px-10">
 
                     <div className="flex shrink-0 items-center gap-3">
@@ -587,7 +649,7 @@ function Dashboard({ user }) {
                         </Link>
 
                         <Link
-                            className="font-semibold tracking-tight text-navbar-ink"
+                            className="hidden font-semibold tracking-tight text-navbar-ink xl:block"
                             to="/dashboard"
                             aria-label="MediReturn dashboard"
                         >
@@ -662,19 +724,19 @@ function Dashboard({ user }) {
             {/* =================================
                 Main Layout
             ================================== */}
-            <div className="mx-auto grid min-h-[calc(100vh-72px)] max-w-[1440px] lg:grid-cols-[252px_minmax(0,1fr)]">
+            <div className="mx-auto grid min-h-[calc(100vh-72px)] max-w-[1440px] xl:grid-cols-[252px_minmax(0,1fr)]">
 
                 {/* =================================
                     Sidebar
                 ================================== */}
-                <aside className="border-b border-panel-muted bg-sidebar p-3 sm:px-6 lg:border-b-0 lg:border-r lg:px-5 lg:py-8">
+                <aside className="hidden border-b border-panel-muted bg-sidebar p-3 sm:px-6 xl:block xl:border-b-0 xl:border-r xl:px-5 xl:py-8">
 
-                    <p className="hidden px-3 pb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-mint-900 lg:block">
+                    <p className="hidden px-3 pb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-mint-900 xl:block">
                         Workspace
                     </p>
 
                     <nav
-                        className="flex gap-2 overflow-x-auto lg:flex-col"
+                        className="flex gap-2 xl:flex-col"
                         aria-label="Dashboard sections"
                     >
                         {/* Overview */}
@@ -755,7 +817,7 @@ function Dashboard({ user }) {
 
                             Medicines
 
-                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 lg:inline-flex">
+                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 xl:inline-flex">
                                 Open
                             </span>
                         </Link>
@@ -782,7 +844,7 @@ function Dashboard({ user }) {
 
                             Medicine Scanner
 
-                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 lg:inline-flex">
+                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 xl:inline-flex">
                                 Open
                             </span>
                         </Link>
@@ -801,7 +863,7 @@ function Dashboard({ user }) {
 
                             Inventory
 
-                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 lg:inline-flex">
+                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 xl:inline-flex">
                                 Open
                             </span>
                         </Link>
@@ -820,7 +882,7 @@ function Dashboard({ user }) {
 
                             Suppliers
 
-                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 lg:inline-flex">
+                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 xl:inline-flex">
                                 Open
                             </span>
                         </Link>
@@ -839,7 +901,7 @@ function Dashboard({ user }) {
 
                             Returns
 
-                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 lg:inline-flex">
+                            <span className="ml-auto hidden rounded-full bg-mint-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-800 xl:inline-flex">
                                 Open
                             </span>
                         </Link>
@@ -858,14 +920,14 @@ function Dashboard({ user }) {
 
                             Analytics
 
-                            <span className="ml-auto hidden text-[10px] font-semibold uppercase tracking-wide text-mint-900 lg:inline-flex">
+                            <span className="ml-auto hidden text-[10px] font-semibold uppercase tracking-wide text-mint-900 xl:inline-flex">
                                 Soon
                             </span>
                         </div>
                     </nav>
 
                     {/* Sidebar Info */}
-                    <div className="mt-10 hidden rounded-2xl border border-deep-teal bg-deep-teal p-4 lg:block">
+                    <div className="mt-10 hidden rounded-2xl border border-deep-teal bg-deep-teal p-4 xl:block">
 
                         <span
                             className="grid size-9 place-items-center rounded-xl bg-panel text-mint-700 shadow-sm"
@@ -1314,7 +1376,7 @@ function Dashboard({ user }) {
                                         </Link>
                                     </div>
 
-                                    <div className="mt-6 grid grid-cols-3 gap-3">
+                                    <div className="mt-6 grid grid-cols-2 gap-3 min-[430px]:grid-cols-3">
 
                                         <div className="rounded-2xl bg-mint-50 p-4">
                                             <p className="text-xs font-semibold text-mint-700">
@@ -1377,7 +1439,7 @@ function Dashboard({ user }) {
                                         </Link>
                                     </div>
 
-                                    <div className="mt-6 grid grid-cols-3 gap-3">
+                                    <div className="mt-6 grid grid-cols-2 gap-3 min-[430px]:grid-cols-3">
 
                                         <div className="rounded-2xl bg-mint-50 p-4">
                                             <p className="text-xs font-semibold text-mint-700">
@@ -1433,16 +1495,21 @@ function Dashboard({ user }) {
                                     </p>
                                 </div>
 
-                                <div className="h-[320px] w-full">
+                                <div
+                                    className="h-[280px] w-full min-w-0 sm:h-[340px] xl:h-[320px]"
+                                    role="img"
+                                    aria-label={`Inventory status distribution: ${statusDistributionData.map(({ name, count }) => `${name}, ${count} batches`).join("; ")}`}
+                                >
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart
                                             data={statusDistributionData}
                                             margin={{
-                                                top: 10,
-                                                right: 20,
+                                                top: chartViewport === "mobile" ? 18 : 10,
+                                                right: chartViewport === "mobile" ? 6 : 20,
                                                 left: 0,
                                                 bottom: 10
                                             }}
+                                            barCategoryGap={chartViewport === "mobile" ? "20%" : chartViewport === "tablet" ? "16%" : "10%"}
                                         >
                                             <CartesianGrid
                                                 strokeDasharray="3 3"
@@ -1452,21 +1519,20 @@ function Dashboard({ user }) {
 
                                             <XAxis
                                                 dataKey="name"
-                                                tick={{
-                                                    fontSize: 13,
-                                                    fontWeight: 500,
-                                                    fill: "var(--color-muted)"
-                                                }}
-                                                tickMargin={8}
+                                                tick={<StatusDistributionTick variant={chartViewport} />}
+                                                interval={0}
+                                                height={chartViewport === "mobile" ? 44 : undefined}
+                                                tickMargin={chartViewport === "mobile" ? 3 : chartViewport === "tablet" ? 6 : 8}
                                                 minTickGap={8}
                                                 axisLine={false}
                                                 tickLine={false}
                                             />
 
                                             <YAxis
+                                                width={chartViewport === "mobile" ? 34 : undefined}
                                                 allowDecimals={false}
                                                 tick={{
-                                                    fontSize: 13,
+                                                    fontSize: chartViewport === "mobile" ? 10 : chartViewport === "tablet" ? 12 : 13,
                                                     fontWeight: 500,
                                                     fill: "var(--color-muted)"
                                                 }}
@@ -1504,8 +1570,18 @@ function Dashboard({ user }) {
                                                     0,
                                                     0
                                                 ]}
-                                                maxBarSize={56}
-                                            />
+                                                maxBarSize={chartViewport === "mobile" ? 32 : chartViewport === "tablet" ? 44 : 56}
+                                            >
+                                                {chartViewport === "mobile" && (
+                                                    <LabelList
+                                                        dataKey="count"
+                                                        position="top"
+                                                        fill="var(--color-ink)"
+                                                        fontSize={10}
+                                                        fontWeight={600}
+                                                    />
+                                                )}
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -1562,7 +1638,9 @@ function Dashboard({ user }) {
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <>
+                                    <ResponsiveTableHint />
+                                    <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" tabIndex={0} aria-label="Urgent inventory, horizontally scrollable table">
                                         <table className="w-full min-w-[760px]">
 
                                             <thead className="bg-slate-50">
@@ -1675,6 +1753,7 @@ function Dashboard({ user }) {
 
                                         </table>
                                     </div>
+                                    </>
                                 )}
                             </section>
 
@@ -1719,7 +1798,9 @@ function Dashboard({ user }) {
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <>
+                                    <ResponsiveTableHint />
+                                    <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" tabIndex={0} aria-label="Upcoming returns, horizontally scrollable table">
                                         <table className="w-full min-w-[760px]">
 
                                             <thead className="bg-slate-50">
@@ -1837,6 +1918,7 @@ function Dashboard({ user }) {
 
                                         </table>
                                     </div>
+                                    </>
                                 )}
                             </section>
 
@@ -1888,7 +1970,9 @@ function Dashboard({ user }) {
                                         </Link>
                                     </div>
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <>
+                                    <ResponsiveTableHint />
+                                    <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" tabIndex={0} aria-label="Recently added inventory, horizontally scrollable table">
                                         <table className="w-full min-w-[760px]">
 
                                             <thead className="bg-slate-50">
@@ -1983,6 +2067,7 @@ function Dashboard({ user }) {
 
                                         </table>
                                     </div>
+                                    </>
                                 )}
                             </section>
 

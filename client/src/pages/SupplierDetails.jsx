@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../lib/api";
+import ResponsiveTableHint from "../components/ResponsiveTableHint.jsx";
 
 const getReferenceId = (value) => {
     if (value && typeof value === "object") {
@@ -361,7 +362,7 @@ function SupplierDetails() {
 
                         <div>
                             <p className="text-sm text-muted">Email</p>
-                            <p className="mt-1 break-all font-semibold text-gray-900">
+                            <p className="mt-1 break-words font-semibold text-gray-900">
                                 {supplier.email || "N/A"}
                             </p>
                         </div>
@@ -471,8 +472,9 @@ function SupplierDetails() {
                         </p>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[800px]">
+                    <ResponsiveTableHint />
+                    <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" tabIndex={0} aria-label="Inventory supplied by this supplier, horizontally scrollable table">
+                        <table className="w-full min-w-[880px]">
                             <thead className="bg-gray-100">
                                 <tr>
                                     {[

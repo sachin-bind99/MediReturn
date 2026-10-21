@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 
 import api from "../lib/api";
+import ResponsiveTableHint from "../components/ResponsiveTableHint.jsx";
 
 
 
@@ -762,7 +763,7 @@ function Suppliers() {
 
 
 
-                <nav className="mb-6 flex flex-wrap gap-1 rounded-xl border border-navbar-ink/20 bg-navbar p-1.5 shadow-sm" aria-label="Main navigation">
+                <nav className="mb-6 hidden flex-wrap gap-1 rounded-xl border border-navbar-ink/20 bg-navbar p-1.5 shadow-sm xl:flex" aria-label="Main navigation">
 
                     <Link className="rounded-lg px-3 py-2 text-sm font-medium text-navbar-ink hover:bg-panel/60 hover:text-navbar-ink" to="/dashboard">Overview</Link>
 
@@ -810,7 +811,7 @@ function Suppliers() {
 
                         onClick={handleAddSupplier}
 
-                        className="rounded-lg bg-mint-700 px-4 py-2 font-medium text-white hover:bg-mint-800"
+                        className="min-h-11 w-full rounded-lg bg-mint-700 px-4 py-2 font-medium text-white hover:bg-mint-800 sm:w-auto"
 
                     >
 
@@ -837,6 +838,7 @@ function Suppliers() {
                         placeholder="🔍 Search by company, contact, email or phone..."
 
                         value={search}
+                        aria-label="Search suppliers by company, contact, email, or phone"
 
                         onChange={(e) =>
 
@@ -860,9 +862,9 @@ function Suppliers() {
 
                 {error && (
 
-                    <div className="mb-6 flex items-center justify-between rounded-lg bg-red-50 p-4 text-red-600">
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-red-50 p-4 text-red-600">
 
-                        <span>{error}</span>
+                        <span className="min-w-0 flex-1">{error}</span>
 
 
 
@@ -872,7 +874,7 @@ function Suppliers() {
 
                             onClick={() => setError("")}
 
-                            className="font-bold text-red-500 hover:text-red-700"
+                            className="min-h-11 min-w-11 shrink-0 font-bold text-red-500 hover:text-red-700"
 
                         >
 
@@ -903,10 +905,88 @@ function Suppliers() {
                 ) : (
 
                     <div className="overflow-hidden rounded-lg border border-line bg-panel shadow-sm">
+                        <div className="divide-y divide-line lg:hidden">
+                            {filteredSuppliers.length > 0 ? (
+                                filteredSuppliers.map((supplier) => (
+                                    <article key={supplier._id} className="space-y-4 p-4">
+                                        <div className="min-w-0">
+                                            <Link
+                                                to={`/suppliers/${supplier._id}`}
+                                                aria-label={`View details for ${supplier.companyName || supplier.name || "supplier"}`}
+                                                className="block break-normal text-base font-semibold text-gray-900 hover:text-mint-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-600"
+                                            >
+                                                {supplier.companyName || "N/A"}
+                                            </Link>
+                                            <p className="mt-1 break-normal text-sm text-muted">
+                                                Contact: {supplier.name || "N/A"}
+                                            </p>
+                                        </div>
 
-                        <div className="overflow-x-auto">
+                                        <dl className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-3 min-[430px]:grid-cols-2">
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Phone</dt>
+                                                <dd className="mt-1 whitespace-nowrap text-sm tabular-nums text-gray-800">
+                                                    {supplier.phone || "N/A"}
+                                                </dd>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Email</dt>
+                                                <dd className="mt-1 break-words text-sm text-gray-800">
+                                                    {supplier.email || "N/A"}
+                                                </dd>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Address</dt>
+                                                <dd className="mt-1 break-normal text-sm text-gray-800">
+                                                    {supplier.address || "N/A"}
+                                                </dd>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="text-xs font-medium text-muted">Return policy</dt>
+                                                <dd className="mt-1 break-normal text-sm text-gray-800">
+                                                    {supplier.returnPolicy || "N/A"}
+                                                </dd>
+                                            </div>
+                                        </dl>
 
-                            <table className="w-full min-w-[800px]">
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleViewSupplier(supplier)}
+                                                className="min-h-11 rounded-lg border border-mint-500 px-2 text-sm font-medium text-mint-700 hover:bg-mint-50"
+                                            >
+                                                View
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEditSupplier(supplier)}
+                                                className="min-h-11 rounded-lg border border-mint-500 px-2 text-sm font-medium text-mint-700 hover:bg-mint-50"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSupplierToDelete(supplier)}
+                                                className="min-h-11 rounded-lg border border-red-500 px-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </article>
+                                ))
+                            ) : (
+                                <p className="px-4 py-10 text-center text-sm text-muted">
+                                    {search.trim()
+                                        ? "No suppliers match your search."
+                                        : "No suppliers found."}
+                                </p>
+                            )}
+                        </div>
+                        <div className="hidden lg:block">
+                        <ResponsiveTableHint />
+                        <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" tabIndex={0} aria-label="Suppliers, horizontally scrollable table">
+
+                            <table className="w-full min-w-[1280px] table-auto">
 
 
 
@@ -914,7 +994,7 @@ function Suppliers() {
 
                                     <tr>
 
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
 
                                             Company
 
@@ -922,7 +1002,7 @@ function Suppliers() {
 
 
 
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
 
                                             Contact
 
@@ -930,7 +1010,7 @@ function Suppliers() {
 
 
 
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
 
                                             Phone
 
@@ -938,7 +1018,7 @@ function Suppliers() {
 
 
 
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
 
                                             Email
 
@@ -946,7 +1026,7 @@ function Suppliers() {
 
 
 
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
 
                                             Address
 
@@ -954,7 +1034,7 @@ function Suppliers() {
 
 
 
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
 
                                             Return Policy
 
@@ -962,7 +1042,7 @@ function Suppliers() {
 
 
 
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                        <th className="min-w-[140px] whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
 
                                             Actions
 
@@ -997,7 +1077,7 @@ function Suppliers() {
                                                         <Link
                                                         to={`/suppliers/${supplier._id}`}
                                                         aria-label={`View details for ${supplier.companyName || supplier.name || "supplier"}`}
-                                                        className="font-medium text-gray-900 transition hover:text-mint-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-600"
+                                                        className="break-normal font-medium text-gray-900 transition hover:text-mint-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-600"
                                                     >
                                                         {supplier.companyName || "N/A"}
                                                     </Link>
@@ -1024,7 +1104,7 @@ function Suppliers() {
 
                                                     {/* Phone */}
 
-                                                    <td className="px-6 py-4 text-gray-700">
+                                                    <td className="whitespace-nowrap px-6 py-4 tabular-nums text-gray-700">
 
                                                         {supplier.phone ||
 
@@ -1036,7 +1116,7 @@ function Suppliers() {
 
                                                     {/* Email */}
 
-                                                    <td className="px-6 py-4 text-gray-700">
+                                                    <td className="break-words px-6 py-4 text-gray-700">
 
                                                         {supplier.email ||
 
@@ -1050,7 +1130,7 @@ function Suppliers() {
 
                                                     <td className="max-w-xs px-6 py-4 text-gray-700">
 
-                                                        <div className="truncate">
+                                                        <div className="break-normal">
 
                                                             {supplier.address ||
 
@@ -1066,7 +1146,7 @@ function Suppliers() {
 
                                                     <td className="max-w-xs px-6 py-4 text-gray-700">
 
-                                                        <div className="truncate">
+                                                        <div className="break-normal">
 
                                                             {supplier.returnPolicy ||
 
@@ -1080,9 +1160,9 @@ function Suppliers() {
 
                                                     {/* Actions */}
 
-                                                    <td className="px-6 py-4">
+                                                    <td className="min-w-[140px] px-6 py-4">
 
-                                                        <div className="flex flex-wrap gap-2">
+                                                        <div className="flex flex-col gap-2">
 
 
 
@@ -1102,7 +1182,7 @@ function Suppliers() {
 
                                                                 }
 
-                                                                className="rounded-lg border border-mint-500 px-3 py-1 text-sm font-medium text-mint-700 hover:bg-mint-50"
+                                                                className="w-full whitespace-nowrap rounded-lg border border-mint-500 px-3 py-1 text-sm font-medium text-mint-700 hover:bg-mint-50"
 
                                                             >
 
@@ -1128,7 +1208,7 @@ function Suppliers() {
 
                                                                 }
 
-                                                                className="rounded-lg border border-mint-500 px-3 py-1 text-sm font-medium text-mint-700 hover:bg-mint-50"
+                                                                className="w-full whitespace-nowrap rounded-lg border border-mint-500 px-3 py-1 text-sm font-medium text-mint-700 hover:bg-mint-50"
 
                                                             >
 
@@ -1154,7 +1234,7 @@ function Suppliers() {
 
                                                                 }
 
-                                                                className="rounded-lg border border-red-500 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-50"
+                                                                className="w-full whitespace-nowrap rounded-lg border border-red-500 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-50"
 
                                                             >
 
@@ -1206,6 +1286,8 @@ function Suppliers() {
 
                         </div>
 
+                        </div>
+
                     </div>
 
                 )}
@@ -1220,7 +1302,7 @@ function Suppliers() {
 
                 {showForm && (
 
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" role="presentation">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-4" role="presentation">
 
                         <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-line bg-panel shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="supplier-form-title">
 
@@ -1228,7 +1310,7 @@ function Suppliers() {
 
                             {/* Modal Header */}
 
-                            <div className="flex items-center justify-between border-b px-6 py-4">
+                            <div className="flex items-center justify-between gap-3 border-b px-4 py-4 sm:px-6">
 
                                 <div>
 
@@ -1266,7 +1348,7 @@ function Suppliers() {
 
                                     disabled={formLoading}
 
-                                    className="text-2xl text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed"
+                                    className="grid size-11 shrink-0 place-items-center rounded-xl text-2xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:cursor-not-allowed"
 
                                 >
 
@@ -1284,7 +1366,7 @@ function Suppliers() {
 
                                 onSubmit={handleSubmit}
 
-                                className="space-y-5 p-6"
+                                className="space-y-5 p-4 sm:p-6"
 
                             >
 
@@ -1294,7 +1376,7 @@ function Suppliers() {
 
                                 <div>
 
-                                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                                    <label htmlFor="supplier-contact-name" className="mb-2 block text-sm font-medium text-gray-700">
 
                                         Contact Name
 
@@ -1306,6 +1388,7 @@ function Suppliers() {
 
                                         type="text"
 
+                                        id="supplier-contact-name"
                                         name="name"
 
                                         value={formData.name}
@@ -1328,7 +1411,7 @@ function Suppliers() {
 
                                 <div>
 
-                                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                                    <label htmlFor="supplier-company-name" className="mb-2 block text-sm font-medium text-gray-700">
 
                                         Company Name
 
@@ -1340,6 +1423,7 @@ function Suppliers() {
 
                                         type="text"
 
+                                        id="supplier-company-name"
                                         name="companyName"
 
                                         value={formData.companyName}
@@ -1368,7 +1452,7 @@ function Suppliers() {
 
                                     <div>
 
-                                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                                        <label htmlFor="supplier-phone" className="mb-2 block text-sm font-medium text-gray-700">
 
                                             Phone
 
@@ -1380,6 +1464,7 @@ function Suppliers() {
 
                                             type="text"
 
+                                            id="supplier-phone"
                                             name="phone"
 
                                             value={formData.phone}
@@ -1404,7 +1489,7 @@ function Suppliers() {
 
                                     <div>
 
-                                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                                        <label htmlFor="supplier-email" className="mb-2 block text-sm font-medium text-gray-700">
 
                                             Email
 
@@ -1416,6 +1501,7 @@ function Suppliers() {
 
                                             type="email"
 
+                                            id="supplier-email"
                                             name="email"
 
                                             value={formData.email}
@@ -1440,7 +1526,7 @@ function Suppliers() {
 
                                 <div>
 
-                                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                                    <label htmlFor="supplier-address" className="mb-2 block text-sm font-medium text-gray-700">
 
                                         Address
 
@@ -1450,6 +1536,7 @@ function Suppliers() {
 
                                     <textarea
 
+                                        id="supplier-address"
                                         name="address"
 
                                         value={formData.address}
@@ -1474,7 +1561,7 @@ function Suppliers() {
 
                                 <div>
 
-                                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                                    <label htmlFor="supplier-return-policy" className="mb-2 block text-sm font-medium text-gray-700">
 
                                         Return Policy
 
@@ -1484,6 +1571,7 @@ function Suppliers() {
 
                                     <textarea
 
+                                        id="supplier-return-policy"
                                         name="returnPolicy"
 
                                         value={formData.returnPolicy}
@@ -1507,11 +1595,12 @@ function Suppliers() {
                                 {/* Optional defaults for new inventory batches */}
                                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                                     <div>
-                                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                                        <label htmlFor="supplier-default-return-window" className="mb-2 block text-sm font-medium text-gray-700">
                                             Default Return Window (days)
                                         </label>
                                         <input
                                             type="number"
+                                            id="supplier-default-return-window"
                                             name="defaultReturnWindowDays"
                                             value={formData.defaultReturnWindowDays}
                                             onChange={handleChange}
@@ -1523,11 +1612,12 @@ function Suppliers() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                                        <label htmlFor="supplier-default-inventory-location" className="mb-2 block text-sm font-medium text-gray-700">
                                             Default Inventory Location
                                         </label>
                                         <input
                                             type="text"
+                                            id="supplier-default-inventory-location"
                                             name="defaultInventoryLocation"
                                             value={formData.defaultInventoryLocation}
                                             onChange={handleChange}
@@ -1543,7 +1633,7 @@ function Suppliers() {
 
                                 {/* Buttons */}
 
-                                <div className="flex justify-end gap-3 border-t pt-5">
+                                <div className="flex flex-col gap-3 border-t pt-5 min-[420px]:flex-row min-[420px]:justify-end">
 
 
 
@@ -1555,7 +1645,7 @@ function Suppliers() {
 
                                         disabled={formLoading}
 
-                                        className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="min-h-11 w-full rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 min-[420px]:w-auto"
 
                                     >
 
@@ -1571,7 +1661,7 @@ function Suppliers() {
 
                                         disabled={formLoading}
 
-                                        className="rounded-lg bg-mint-700 px-5 py-2 font-medium text-white hover:bg-mint-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="min-h-11 w-full rounded-lg bg-mint-700 px-5 py-2 font-medium text-white hover:bg-mint-800 disabled:cursor-not-allowed disabled:opacity-50 min-[420px]:w-auto"
 
                                     >
 
@@ -1609,9 +1699,9 @@ function Suppliers() {
 
                 {supplierToDelete && (
 
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" role="presentation">
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-4" role="presentation">
 
-                        <div className="w-full max-w-md rounded-2xl border border-line bg-panel p-5 shadow-2xl sm:p-6" role="dialog" aria-modal="true" aria-labelledby="supplier-delete-title">
+                        <div className="w-full max-w-md rounded-2xl border border-line bg-panel p-4 shadow-2xl sm:p-6" role="dialog" aria-modal="true" aria-labelledby="supplier-delete-title">
 
 
 
@@ -1627,7 +1717,7 @@ function Suppliers() {
 
                                 Are you sure you want to delete{" "}
 
-                                <span className="font-semibold text-gray-900">
+                                <span className="break-normal font-semibold text-gray-900">
 
                                     {supplierToDelete.companyName}
 
@@ -1643,7 +1733,7 @@ function Suppliers() {
 
 
 
-                            <div className="mt-6 flex justify-end gap-3">
+                            <div className="mt-6 flex flex-col gap-3 min-[420px]:flex-row min-[420px]:justify-end">
 
 
 
@@ -1659,7 +1749,7 @@ function Suppliers() {
 
                                     disabled={deleting}
 
-                                    className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="min-h-11 w-full rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 min-[420px]:w-auto"
 
                                 >
 
@@ -1677,7 +1767,7 @@ function Suppliers() {
 
                                     disabled={deleting}
 
-                                    className="rounded-lg bg-danger-button px-4 py-2 font-medium text-white hover:bg-danger-button-hover disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="min-h-11 w-full rounded-lg bg-danger-button px-4 py-2 font-medium text-white hover:bg-danger-button-hover disabled:cursor-not-allowed disabled:opacity-50 min-[420px]:w-auto"
 
                                 >
 

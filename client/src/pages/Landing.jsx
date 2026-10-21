@@ -24,16 +24,16 @@ function Landing() {
   return (
       <div className="min-h-screen overflow-hidden bg-canvas text-slate-800">
       <nav className="relative z-10 border-b border-navbar-ink/20 bg-navbar text-navbar-ink shadow-sm" aria-label="Main navigation">
-        <div className="mx-auto flex h-[76px] w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12">
-          <Link className="flex items-center gap-3 font-semibold tracking-tight text-navbar-ink" to="/">
+        <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2 sm:h-[76px] sm:min-h-0 sm:flex-nowrap sm:px-8 sm:py-0 lg:px-12">
+          <Link className="flex shrink-0 items-center gap-2 font-semibold tracking-tight text-navbar-ink sm:gap-3" to="/">
             <BrandMark />
-            <span className="text-lg">Medi<span className="text-navbar-ink">Return</span></span>
+            <span className="text-base sm:text-lg">Medi<span className="text-navbar-ink">Return</span></span>
           </Link>
-          <div className="flex items-center gap-3 sm:gap-7">
-            <Link className="text-sm font-semibold text-navbar-ink transition hover:underline" to="/login">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-7">
+            <Link className="whitespace-nowrap text-sm font-semibold text-navbar-ink transition hover:underline" to="/login">
               Sign in
             </Link>
-            <Link className="inline-flex h-11 items-center justify-center rounded-xl bg-mint-700 px-4 text-sm font-semibold text-white shadow-lg shadow-mint-900/10 transition hover:-translate-y-0.5 hover:bg-mint-800 sm:px-5" to="/register">
+            <Link className="inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-mint-700 px-3 text-sm font-semibold text-white shadow-lg shadow-mint-900/10 transition hover:-translate-y-0.5 hover:bg-mint-800 sm:h-11 sm:px-5" to="/register">
               Get started
             </Link>
           </div>
@@ -41,14 +41,14 @@ function Landing() {
       </nav>
 
       <main>
-        <section className="relative isolate mx-auto grid min-h-[calc(100svh-76px)] w-full max-w-7xl items-center gap-14 px-5 py-16 sm:px-8 md:py-20 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16 lg:px-12 lg:py-24">
+        <section className="relative isolate mx-auto grid min-h-[calc(100svh-64px)] w-full max-w-7xl items-center gap-14 px-5 py-12 sm:min-h-[calc(100svh-76px)] sm:px-8 sm:py-16 md:py-20 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16 lg:px-12 lg:py-24">
           <div className="pointer-events-none absolute -left-40 top-16 size-96 rounded-full bg-sidebar/20 blur-3xl" aria-hidden="true" />
           <div className="relative z-10 max-w-2xl">
             <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-mint-200 bg-panel px-3.5 py-2 text-xs font-semibold tracking-wide text-mint-800 shadow-sm shadow-mint-900/5">
               <span className="size-2 rounded-full bg-mint-600 ring-4 ring-sidebar/30" />
               A clearer way to manage your pharmacy
             </div>
-            <h1 className="max-w-2xl font-sans text-5xl font-semibold leading-[1.04] tracking-[-0.055em] text-slate-900 sm:text-6xl lg:text-[4.35rem]">
+            <h1 className="max-w-2xl font-sans text-4xl font-semibold leading-[1.04] tracking-[-0.055em] text-slate-900 sm:text-6xl lg:text-[4.35rem]">
               Your medicine catalog, <span className="text-mint-700">under control.</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-8 text-slate-600 sm:text-lg">
@@ -74,14 +74,14 @@ function Landing() {
             <div className="absolute -bottom-12 -left-8 size-48 rounded-full bg-sage/40 blur-3xl" />
             <div className="absolute -inset-4 rotate-[-3deg] rounded-[2rem] bg-panel shadow-2xl shadow-mint-900/10 sm:-inset-6 sm:rounded-[2.5rem]" />
             <div className="relative rounded-[1.7rem] border border-line/80 bg-panel/90 p-4 shadow-2xl shadow-slate-900/10 backdrop-blur sm:rounded-[2rem] sm:p-7">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-5">
+              <div className="flex flex-col items-start gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <BrandMark />
                   <div><p className="text-sm font-semibold text-slate-900">Medicine catalog</p><p className="mt-0.5 text-xs text-muted">Your pharmacy at a glance</p></div>
                 </div>
                 <span className="rounded-full bg-mint-50 px-3 py-1.5 text-xs font-semibold text-mint-700">Catalog preview</span>
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
                 <div className="rounded-2xl bg-slate-50 p-4 sm:p-5"><p className="text-xs font-medium text-muted">Catalog items</p><p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">248</p><p className="mt-1 text-xs text-muted">organized in one place</p></div>
                 <div className="rounded-2xl bg-mint-50 p-4 sm:p-5"><p className="text-xs font-medium text-mint-700">Categories</p><p className="mt-2 text-3xl font-semibold tracking-tight text-mint-900">12</p><p className="mt-1 text-xs text-mint-700/75">easy to browse</p></div>
               </div>

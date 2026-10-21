@@ -34,7 +34,7 @@ function MobileAppNavigation() {
     }, [isOpen]);
 
     useEffect(() => {
-        const desktopViewport = window.matchMedia("(min-width: 64rem)");
+        const desktopViewport = window.matchMedia("(min-width: 80rem)");
         const closeOnDesktop = () => {
             if (desktopViewport.matches) setIsOpen(false);
         };
@@ -46,7 +46,7 @@ function MobileAppNavigation() {
     const closeMenu = () => setIsOpen(false);
 
     return (
-        <div className="sticky top-0 z-40 flex h-12 items-center justify-between border-b border-navbar-ink/20 bg-navbar px-4 text-navbar-ink lg:hidden">
+        <div className="sticky top-0 z-40 flex h-12 items-center justify-between border-b border-navbar-ink/20 bg-navbar px-4 text-navbar-ink xl:hidden">
             <Link
                 className="rounded font-semibold tracking-tight text-navbar-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-200"
                 to="/dashboard"
@@ -71,12 +71,13 @@ function MobileAppNavigation() {
                 id="mobile-app-navigation"
                 ref={dialogRef}
                 aria-labelledby="mobile-app-navigation-title"
+                aria-modal="true"
                 onCancel={closeMenu}
                 onClose={closeMenu}
                 onClick={(event) => {
                     if (event.target === dialogRef.current) closeMenu();
                 }}
-                className="fixed inset-0 z-[80] m-0 h-dvh max-h-dvh w-full max-w-full overflow-hidden border-0 bg-transparent p-0 text-ink backdrop:bg-slate-950/55 lg:hidden"
+                className="fixed inset-0 z-[80] m-0 h-dvh max-h-dvh w-full max-w-full overflow-hidden border-0 bg-transparent p-0 text-ink backdrop:bg-slate-950/55 xl:hidden"
             >
                 <div className="flex h-full w-[min(21rem,calc(100vw-1rem))] max-w-full flex-col border-r border-line bg-panel shadow-2xl">
                     <div className="flex min-h-16 items-center justify-between border-b border-line px-4">

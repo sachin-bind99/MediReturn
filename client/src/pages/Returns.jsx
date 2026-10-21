@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 
 import ReturnForm from "../components/returns/ReturnForm";
+import ResponsiveTableHint from "../components/ResponsiveTableHint.jsx";
 
 const STATUS_OPTIONS = ["PENDING", "APPROVED", "REJECTED", "RETURNED"];
 
@@ -651,7 +652,7 @@ export default function Returns() {
 
               aria-label="Filter return requests by status"
 
-              className="rounded-xl border border-slate-300 bg-panel px-3 py-3 text-sm outline-none focus:border-mint-600"
+              className="w-full min-w-0 rounded-xl border border-slate-300 bg-panel px-3 py-3 text-sm outline-none focus:border-mint-600"
 
             >
 
@@ -789,7 +790,9 @@ export default function Returns() {
 
           ) : (
 
-            <div className="overflow-x-auto">
+            <>
+            <ResponsiveTableHint />
+            <div className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" tabIndex={0} aria-label="Return requests, horizontally scrollable table">
 
               <table className="w-full min-w-[1100px]">
 
@@ -1027,6 +1030,7 @@ export default function Returns() {
 
             </div>
 
+            </>
           )}
 
         </section>

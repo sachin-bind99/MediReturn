@@ -511,14 +511,14 @@ export default function Alerts() {
                         onChange={(event) => setSearch(event.target.value)}
                         placeholder="Search title, message, or batch number..."
                         aria-label="Search alerts by title, message, or batch number"
-                        className="min-w-0 rounded-xl border border-slate-300 bg-panel px-3 py-2.5 text-sm outline-none focus:border-mint-600 focus:ring-2 focus:ring-mint-100"
+                        className="w-full min-w-0 rounded-xl border border-slate-300 bg-panel px-3 py-2.5 text-sm outline-none focus:border-mint-600 focus:ring-2 focus:ring-mint-100"
                     />
 
                     <select
                         value={typeFilter}
                         onChange={(event) => setTypeFilter(event.target.value)}
                         aria-label="Filter alerts by type"
-                        className="rounded-xl border border-slate-300 bg-panel px-3 py-2.5 text-sm outline-none focus:border-mint-600"
+                        className="w-full min-w-0 rounded-xl border border-slate-300 bg-panel px-3 py-2.5 text-sm outline-none focus:border-mint-600"
                     >
                         <option value="ALL">All alert types</option>
                         <option value="RETURN_DUE">Return due</option>
@@ -531,7 +531,7 @@ export default function Alerts() {
                         value={priorityFilter}
                         onChange={(event) => setPriorityFilter(event.target.value)}
                         aria-label="Filter alerts by priority"
-                        className="rounded-xl border border-slate-300 bg-panel px-3 py-2.5 text-sm outline-none focus:border-mint-600"
+                        className="w-full min-w-0 rounded-xl border border-slate-300 bg-panel px-3 py-2.5 text-sm outline-none focus:border-mint-600"
                     >
                         <option value="ALL">All priorities</option>
                         <option value="HIGH">High</option>
