@@ -1,5 +1,4 @@
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
 import { createHash, randomBytes } from "node:crypto";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
@@ -15,26 +14,20 @@ const MAX_PASSWORD_BYTES = 72;
 
 // Reset links expire after 15 minutes.
 const PASSWORD_RESET_EXPIRY_MS = 15 * 60 * 1000;
+const PASSWORD_RESET_EMAIL_TIMEOUT_MS = 10 * 1000;
 
 // Generic response prevents revealing whether an account exists.
 const RESET_REQUEST_MESSAGE =
     "If an eligible account exists for this email, a password reset link will be sent.";
 
-// ----------------------------------------
-// Email transport
-// ----------------------------------------
-function createEmailTransporter() {
-    const port = Number(process.env.SMTP_PORT || 587);
+function getSafeEmailErrorDetails(error) {
+    const statusCode = error?.statusCode;
 
-    return nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port,
-        secure: process.env.SMTP_SECURE === "true" || port === 465,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        },
-    });
+    return {
+        ...(Number.isInteger(statusCode) && statusCode >= 100 && statusCode <= 599
+            ? { statusCode }
+            : {}),
+    };
 }
 
 // ----------------------------------------
@@ -329,31 +322,40 @@ export const forgotPassword = async (req, res) => {
     }
 
     // Check configuration before looking up the account.
-    if (
-        !process.env.SMTP_HOST ||
-        !process.env.SMTP_USER ||
-        !process.env.SMTP_PASS ||
-        !process.env.FRONTEND_URL
-    ) {
+    const appsScriptUrlValue = process.env.APPS_SCRIPT_URL?.trim();
+    const mailSecret = process.env.MEDIRETURN_MAIL_SECRET?.trim();
+    const frontendUrlValue = process.env.FRONTEND_URL?.trim();
+
+    if (!appsScriptUrlValue || !mailSecret || !frontendUrlValue) {
         console.error("Password reset email configuration is incomplete.");
         return res.status(503).json({
             message: "Password reset email service is not configured",
         });
     }
 
+    let appsScriptUrl;
     let frontendUrl;
 
     try {
-        frontendUrl = new URL(process.env.FRONTEND_URL);
-        if (!['http:', 'https:'].includes(frontendUrl.protocol)) {
-            throw new Error("Invalid frontend URL protocol");
+        appsScriptUrl = new URL(appsScriptUrlValue);
+        frontendUrl = new URL(frontendUrlValue);
+        if (
+            !["http:", "https:"].includes(appsScriptUrl.protocol) ||
+            !appsScriptUrl.pathname.endsWith("/exec") ||
+            !["http:", "https:"].includes(frontendUrl.protocol)
+        ) {
+            throw new Error("Invalid password reset URL configuration");
         }
     } catch {
-        console.error("Invalid FRONTEND_URL configuration.");
+        console.error("Invalid password reset URL configuration.");
         return res.status(503).json({
             message: "Password reset email service is not configured",
         });
     }
+
+    // Use a normalized origin so a configured trailing slash cannot produce a
+    // double slash or a URL that disagrees with the Apps Script frontend URL.
+    const normalizedFrontendUrl = frontendUrl.origin;
 
     try {
         const user = await User.findOne({ email }).select("+password");
@@ -377,33 +379,65 @@ export const forgotPassword = async (req, res) => {
         );
         await user.save();
 
-        const resetUrl = new URL("/reset-password", frontendUrl);
+        const resetUrl = new URL("/reset-password", `${normalizedFrontendUrl}/`);
         resetUrl.searchParams.set("token", resetToken);
 
-        const transporter = createEmailTransporter();
+        let emailFailure;
+        const abortController = new AbortController();
+        const timeout = setTimeout(() => {
+            abortController.abort(
+                new DOMException(
+                    "Password reset email request timed out",
+                    "TimeoutError"
+                )
+            );
+        }, PASSWORD_RESET_EMAIL_TIMEOUT_MS);
 
         try {
-            await transporter.sendMail({
-                from: process.env.SMTP_FROM || process.env.SMTP_USER,
-                to: user.email,
-                subject: "Reset your MediReturn password",
-                text: [
-                    "We received a request to reset your MediReturn password.",
-                    "",
-                    `Open this link to choose a new password: ${resetUrl.toString()}`,
-                    "",
-                    "This link expires in 15 minutes and can only be used once.",
-                    "If you did not request a reset, you can ignore this email.",
-                ].join("\n"),
-                html: `
-                    <p>We received a request to reset your MediReturn password.</p>
-                    <p><a href="${resetUrl.toString()}">Reset your password</a></p>
-                    <p>This link expires in 15 minutes and can only be used once.</p>
-                    <p>If you did not request a reset, you can ignore this email.</p>
-                `,
+            const response = await fetch(appsScriptUrl, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                    secret: mailSecret,
+                    to: user.email,
+                    resetUrl: resetUrl.toString(),
+                }),
+                signal: abortController.signal,
             });
-        } catch (emailError) {
-            console.error("Password reset email could not be sent:", emailError.message);
+
+            let serviceResult;
+            try {
+                serviceResult = await response.json();
+            } catch {
+                emailFailure = {
+                    kind: "invalid_response",
+                    ...getSafeEmailErrorDetails({ statusCode: response.status }),
+                };
+            }
+
+            if (
+                !emailFailure &&
+                (response.ok !== true || serviceResult?.ok !== true)
+            ) {
+                emailFailure = {
+                    kind: "service_rejected",
+                    ...getSafeEmailErrorDetails({ statusCode: response.status }),
+                };
+            }
+        } catch (sendError) {
+            emailFailure = {
+                kind:
+                    sendError?.name === "TimeoutError" ||
+                    sendError?.name === "AbortError"
+                        ? "timeout"
+                        : "network_error",
+            };
+        } finally {
+            clearTimeout(timeout);
+        }
+
+        if (emailFailure) {
+            console.error("Password reset email could not be sent.", emailFailure);
 
             // Invalidate the token if the email could not be sent.
             user.passwordResetTokenHash = undefined;
@@ -412,10 +446,10 @@ export const forgotPassword = async (req, res) => {
             try {
                 await user.save();
             } catch (cleanupError) {
-                console.error(
-                    "Could not clear an unsent reset token:",
-                    cleanupError.message
-                );
+                console.error("Could not clear an unsent reset token.", {
+                    kind: "database_error",
+                    ...getSafeEmailErrorDetails(cleanupError),
+                });
             }
 
             // Keep the public response generic to avoid account enumeration.
@@ -425,7 +459,10 @@ export const forgotPassword = async (req, res) => {
             message: RESET_REQUEST_MESSAGE,
         });
     } catch (error) {
-        console.error("Forgot password error:", error);
+        console.error("Forgot password error.", {
+            kind: "processing_error",
+            ...getSafeEmailErrorDetails(error),
+        });
         return res.status(500).json({
             message: "Unable to process the password reset request",
         });
