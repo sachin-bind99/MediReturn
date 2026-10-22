@@ -1357,17 +1357,11 @@ function MedicineScanner() {
                             <input
 
                                 id="medicine-image-input"
-
                                 type="file"
-
                                 accept="image/jpeg,image/png,.jpg,.jpeg,.png"
                                 multiple
-                                capture="environment"
-
                                 onChange={handleFileChange}
-
                                 disabled={scanning || aiAnalyzing}
-
                                 className="sr-only"
 
                             />
